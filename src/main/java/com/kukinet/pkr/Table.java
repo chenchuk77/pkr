@@ -4,6 +4,7 @@ import org.java_websocket.WebSocket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.List;
 
@@ -70,6 +71,15 @@ public class Table {
     public void waitPlayerCommand(Player player){
         connectionManager.getPlayerConnetion(player).send("request-player-action");
     }
+
+    public void call(String playerName, String amount){
+        if (player.getName().equals(playerName)){
+            player.call(Integer.valueOf(amount));
+            logger.info("call,{} of {} handled.", amount, playerName);
+
+        }
+    }
+
 
     private void seatPlayers(){
         if (players.size() < MIN_PLAYERS || players.size() > MAX_PLAYERS){

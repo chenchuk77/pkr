@@ -83,6 +83,10 @@ public List<Player> getPlayers() {
         logger.info("starting game: {}, with {} players.", name, players.size());
 
         Table table = new Table(players, connectionManager);
+
+        for (Player player: players){
+            player.setTable(table);
+        }
         table.playRound();
 
     }

@@ -123,12 +123,16 @@ public class ConnectionManager extends WebSocketServer {
             lobbyManager.startGame(name);
         }
 
-//        if (message.startsWith("call")){
-//            logger.info("call command accepted.");
-//            String commnd = message.split(",")[0];
-//            String amount = message.split(",")[1];
+        if (message.startsWith("call")){
+            logger.info("call command accepted.");
+            String commnd = message.split(",")[0];
+            String amount = message.split(",")[1];
+
+            String playerName = connections.get(ws).getPlayer().getName();
+            Table table = connections.get(ws).getPlayer().getTable();
+            table.call(playerName, amount);
 //            lobbyManager.call(amount);
-//        }
+        }
 
         if (message.startsWith("stop-server")){
             logger.info("stop-server command accepted from {}.", getUserName(ws));

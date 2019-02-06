@@ -4,7 +4,7 @@ import java.util.Objects;
 
 public class Player {
 
-
+    private Table table;
     private String name;
     private int stack;
     private int commited;
@@ -19,7 +19,13 @@ public class Player {
     public String getName() {
         return name;
     }
+    public Table getTable() {
+        return table;
+    }
 
+    public void setTable(Table table) {
+        this.table = table;
+    }
 
     public void init(){
         inHand = false;
