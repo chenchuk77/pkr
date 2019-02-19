@@ -1,5 +1,7 @@
 package com.kukinet.pkr;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
@@ -7,16 +9,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.*;
 
 @Component
 public class ConnectionManager extends WebSocketServer {
-
-    private static int TCP_PORT = 4444;
     Logger logger = LoggerFactory.getLogger(ConnectionManager.class);
+    private static int TCP_PORT = 4444;
+    private Map<WebSocket, Connection> connections;
 
     @Autowired
     private LobbyManager lobbyManager;
@@ -24,18 +25,10 @@ public class ConnectionManager extends WebSocketServer {
     @Autowired
     private LoginService loginService;
 
-    private Map<WebSocket, Connection> connections;
-
-
-
-//    private Set<WebSocket> conns;
-
     public ConnectionManager() {
         super(new InetSocketAddress(TCP_PORT));
-//        conns = new HashSet<>();
         connections = new HashMap<>();
         this.start();
-
     }
 
 //    private void removeConnection(){
@@ -49,26 +42,68 @@ public class ConnectionManager extends WebSocketServer {
 
     @Override
     public void onOpen(WebSocket ws, ClientHandshake handshake) {
-//        conns.add(ws);
-//        connections.add(ws, new Connection(ws));
         connections.put(ws, new Connection(ws));
-
         logger.info("New connection from {}.", ws.getRemoteSocketAddress().getAddress().getHostAddress());
     }
 
     @Override
     public void onClose(WebSocket ws, int code, String reason, boolean remote) {
-//        conns.remove(ws);
-
         connections.remove(ws);
         logger.warn("close {} from {}, code:{} reason:{} ",
                 ws, ws.getRemoteSocketAddress().getAddress().getHostAddress(), code, reason);
     }
 
-
-
     @Override
     public void onMessage(WebSocket ws, String message) {
+
+//        // for cli client testing. use comma del string for simplicity
+//        if (message.startsWith("call")){
+//            String action = message.split(",")[0];
+//            String amount = message.split(",")[1];
+//
+//
+//            JsonObject ActionCommandJSON = new JsonObject();
+//            ActionCommandJSON.addProperty("action", "call");
+//            ActionCommandJSON.addProperty("amount", Integer.valueOf(amount));
+//            playerMoveUpdate.addProperty("player", player.getName());
+//            logger.info("player {} fold.", player.getName());
+//            alertAll(playerMoveUpdate.toString());
+//
+//            logger.info("register command accepted from {}.", getUserName(ws));
+//            String cmd = message.split(",")[0];
+//            String username = message.split(",")[1];
+//            String gamename = message.split(",")[2];
+//            lobbyManager.registerUser(username, gamename);
+//
+//
+//            Gson gson = new Gson();
+//            ActionCommand cmd = gson.fromJson(message, ActionCommand.class);
+//            Player player = connections.get(ws).getPlayer();
+//            logger.info("action JSON received from {}", player.getName());
+//            if (player.isWaitForAction()){
+//                player.setActionCommand(cmd);
+//                logger.info("{} action set for {}", cmd.getAction(), player.getName());
+//            } else {
+//                logger.warn("{} action received from {}, but player is not ready.", cmd.getAction(), player.getName());
+//            }
+//        }
+//
+
+
+        if (message.contains("action")){
+            Gson gson = new Gson();
+            ActionCommand cmd = gson.fromJson(message, ActionCommand.class);
+            Player player = connections.get(ws).getPlayer();
+            logger.info("action JSON received from {}", player.getName());
+            if (player.isWaitForAction()){
+                player.setActionCommand(cmd);
+                logger.info("{} action set for {}", cmd.getAction(), player.getName());
+            } else {
+                logger.warn("{} action received from {}, but player is not ready.", cmd.getAction(), player.getName());
+            }
+        }
+
+
         if (message.startsWith("login")){
             logger.info("login command accepted.");
             String cmd = message.split(",")[0];
@@ -77,7 +112,6 @@ public class ConnectionManager extends WebSocketServer {
             User user = loginService.login(username, password);
             if (user != null){
                 connections.put(ws, new Connection(user, ws));
-//                lobbyManager.loginUser(user, ws);
                 lobbyManager.loginUser(user);
             } else {
                 logger.warn("no such user: {}.", username);
@@ -100,7 +134,6 @@ public class ConnectionManager extends WebSocketServer {
 
 
 
-
         if (message.startsWith("register")){
             logger.info("register command accepted from {}.", getUserName(ws));
             String cmd = message.split(",")[0];
@@ -109,30 +142,36 @@ public class ConnectionManager extends WebSocketServer {
             lobbyManager.registerUser(username, gamename);
         }
 
-        if (message.startsWith("create-game")){
-            logger.info("create-game command accepted from {}.", getUserName(ws));
-            String cmd = message.split(",")[0];
-            String name = message.split(",")[1];
-            String price = message.split(",")[2];
-            lobbyManager.createGame(name, price, this);
-        }
-        if (message.startsWith("start-game")){
-            logger.info("start-game command accepted from {}.", getUserName(ws));
-            String cmd = message.split(",")[0];
-            String name = message.split(",")[1];
-            lobbyManager.startGame(name);
-        }
+//        if (message.startsWith("create-game")){
+//            logger.info("create-game command accepted from {}.", getUserName(ws));
+//            String cmd = message.split(",")[0];
+//            String name = message.split(",")[1];
+//            String price = message.split(",")[2];
+//            lobbyManager.createGame(name, price, this);
+//        }
+//        if (message.startsWith("start-game")){
+//            logger.info("start-game command accepted from {}.", getUserName(ws));
+//            String cmd = message.split(",")[0];
+//            String name = message.split(",")[1];
+//            lobbyManager.startGame(name);
+//        }
 
-        if (message.startsWith("call")){
-            logger.info("call command accepted.");
-            String commnd = message.split(",")[0];
-            String amount = message.split(",")[1];
-
-            String playerName = connections.get(ws).getPlayer().getName();
-            Table table = connections.get(ws).getPlayer().getTable();
-            table.call(playerName, amount);
-//            lobbyManager.call(amount);
-        }
+//        // notification mechanism
+//        if (message.startsWith("action")){
+//            logger.info("actionCommand accepted.");   /// action,call,30
+//            String action = message.split(",")[1];
+//            String amount = message.split(",")[2];
+//            Player player = connections.get(ws).getPlayer();
+//            if (player.isWaitForAction()){
+//                ActionCommand cmd = new ActionCommand();
+//                cmd.setAction(action);
+//                cmd.setAmount(Integer.valueOf(amount));
+//                player.setActionCommand(cmd);
+//                logger.info("{} action set for {}", action, player.getName());
+//            } else {
+//                logger.warn("{} action received from {}, but player is not ready.", action, player.getName());
+//            }
+//        }
 
         if (message.startsWith("stop-server")){
             logger.info("stop-server command accepted from {}.", getUserName(ws));
@@ -147,23 +186,15 @@ public class ConnectionManager extends WebSocketServer {
                 e.printStackTrace();
             }
         }
-
-//        logger.info("Message from {}: {} ", ws , message);
-//        logger.info("Message from {}: {} ", lobbyManager.getUsername(ws) , message);
-//        for (WebSocket sock : conns) {
-//            sock.send(message);
-//        }
     }
 
     @Override
     public void onError(WebSocket ws, Exception ex) {
         ex.printStackTrace();
         if (ws != null) {
-//            conns.remove(ws);
             connections.remove(ws);
             // do some thing if required
         }
-//        logger.error("ERROR from {}.", ws.getRemoteSocketAddress().getAddress().getHostAddress());
         logger.error("ERROR");
     }
 
@@ -181,24 +212,14 @@ public class ConnectionManager extends WebSocketServer {
             if (c.getUser().equals(user)){
                 c.setPlayer(player);
             }
-//            Player p = c.getPlayer();
-//
-//            if (p.equals(t)) {
-//                //if (e.getValue().getPlayer().equals(player)) {
-//                WebSocket key = e.getKey();
-//                return key;
-//            }
         }
-//        return null;
     }
 
     public WebSocket getPlayerConnetion(Player player){
         for (Map.Entry<WebSocket, Connection> e : connections.entrySet()) {
             Connection c = e.getValue();
-                    Player p = c.getPlayer();
-
+            Player p = c.getPlayer();
             if (p.equals(player)) {
-                //if (e.getValue().getPlayer().equals(player)) {
                 WebSocket key = e.getKey();
                 return key;
             }
@@ -208,8 +229,6 @@ public class ConnectionManager extends WebSocketServer {
     public String getUserName(WebSocket webSocket){
         return connections.get(webSocket).getUser().getName();
     }
-
-
 }
 
 

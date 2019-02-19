@@ -3,18 +3,13 @@ package com.kukinet.pkr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-
-import javax.jws.soap.SOAPBinding;
 import java.util.Arrays;
 import java.util.List;
 
 @Component
 public class LoginService {
-
-    private List<User> users;
-
     Logger logger = LoggerFactory.getLogger(LoginService.class);
-
+    private List<User> users;
 
     public LoginService(){
         users = Arrays.asList(
@@ -31,7 +26,6 @@ public class LoginService {
                 new User("ggg", "1234", 1000),
                 new User("hhh", "1234", 7000),
                 new User("iii", "1234", 1000));
-
     }
 
     public User login(String name, String password){

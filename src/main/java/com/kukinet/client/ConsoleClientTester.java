@@ -1,4 +1,4 @@
-package com.kukinet.pkr;
+package com.kukinet.client;
 
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.drafts.Draft;
@@ -34,7 +34,7 @@ public class ConsoleClientTester extends WebSocketClient {
     @Override
     public void onMessage( String message ) {
         System.out.println( "received: " + message );
-        if (message.startsWith("request-player-action,")){
+        if (message.startsWith("waitaction,")){
             play();
         }
     }

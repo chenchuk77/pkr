@@ -1,29 +1,22 @@
 package com.kukinet.pkr;
 
-import org.java_websocket.WebSocket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-public class Game {
-
+public class Game implements Runnable {
+    Logger logger = LoggerFactory.getLogger(Game.class);
     private ConnectionManager connectionManager;
     private String name;
     private String price;
-//    private Map<Player, WebSocket> players;
     private List<Player> players;
 
-    Logger logger = LoggerFactory.getLogger(Game.class);
 
     public Game(String name, String price, ConnectionManager connectionManager){
         this.name=name;
         this.price=price;
         this.connectionManager = connectionManager;
-//        this.players=new HashMap<>();
         this.players=new ArrayList<>();
     }
 
@@ -35,16 +28,10 @@ public class Game {
         this.name = name;
     }
 
-//    public List<Player> getPlayers() {
-//        return players;
-//    }
-public List<Player> getPlayers() {
+    public List<Player> getPlayers() {
     return players;
 }
 
-//    public void setPlayers(<Player,WebSocket> players) {
-//        this.players = players;
-//    }
     public void setPlayers(List<Player> players) {
         this.players = players;
     }
@@ -59,35 +46,35 @@ public List<Player> getPlayers() {
 //        players.add(new Player("test6"));
 //    }
 
-//    // create a player from user
-//    public void addPlayer(User user, WebSocket connection) {
-////        String s = user.getName();
-////        Player p = new Player(s);
-////        players.add(p);
-//
-//        players.put(new Player(user.getName()), connection);
-//    }
 
 
     public void addPlayer(User user) {
-//        String s = user.getName();
         Player player = new Player(user.getName());
         players.add(player);
         connectionManager.setPlayer(user, player);
-        //return player;
-//        players.add(new Player(user.getName()));
     }
 
 
-    public void start(){
+//    public void start(){
+//        logger.info("starting game: {}, with {} players.", name, players.size());
+//        Table table = new Table(players, connectionManager);
+//        // TODO: why player need to know his table, can be many
+//        for (Player player: players){
+//            player.setTable(table);
+//        }
+//        table.playRound();
+//    }
+
+    @Override
+    public void run() {
         logger.info("starting game: {}, with {} players.", name, players.size());
-
         Table table = new Table(players, connectionManager);
-
+        // TODO: why player need to know his table, can be many
         for (Player player: players){
             player.setTable(table);
         }
-        table.playRound();
+        //table.playRound();
+        table.gameLoop();
 
     }
 }

@@ -11,25 +11,18 @@ public class Connection {
     public User getUser() {
         return user;
     }
-
     public void setUser(User user) {
         this.user = user;
     }
-
-    public Player getPlayer() {
-        return player;
-    }
-
+    public Player getPlayer() { return player;}
     public void setPlayer(Player player) {
         this.player = player;
     }
-
-    public WebSocket getWebSocket() {
-        return webSocket;
-    }
-
     public void setWebSocket(WebSocket webSocket) {
         this.webSocket = webSocket;
+    }
+    public WebSocket getWebSocket() {
+        return webSocket;
     }
 
     public Connection(User user, Player player, WebSocket webSocket) {
