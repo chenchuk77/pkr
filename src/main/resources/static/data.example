@@ -1,0 +1,19 @@
+
+client connected.
+received: {"0":{"name":"ddd","startingStack":10000,"effectiveStack":10000,"commited":0,"inGame":true,"inHand":true},"1":{"name":"eee","startingStack":10000,"effectiveStack":10000,"commited":0,"inGame":true,"inHand":true},"2":{"name":"fff","startingStack":10000,"effectiveStack":10000,"commited":0,"inGame":true,"inHand":true},"3":{"name":"iii","startingStack":10000,"effectiveStack":10000,"commited":0,"inGame":true,"inHand":true}}
+received: {"ante":0,"sb":30,"bb":60}
+received: {"sbPosition":0,"bbPosition":1,"dealerPosition":3}
+received: {"seat":0,"player":"ddd","command":"sb","value":30}
+received: {"sbPosition":0,"bbPosition":1,"dealerPosition":3}
+received: {"0":{"name":"ddd","startingStack":10000,"effectiveStack":9970,"commited":30,"inGame":true,"inHand":true},"1":{"name":"eee","startingStack":10000,"effectiveStack":10000,"commited":0,"inGame":true,"inHand":true},"2":{"name":"fff","startingStack":10000,"effectiveStack":10000,"commited":0,"inGame":true,"inHand":true},"3":{"name":"iii","startingStack":10000,"effectiveStack":10000,"commited":0,"inGame":true,"inHand":true}}
+received: {"seat":1,"player":"eee","command":"bb","value":60}
+received: {"sbPosition":0,"bbPosition":1,"dealerPosition":3}
+received: {"0":{"name":"ddd","startingStack":10000,"effectiveStack":9970,"commited":30,"inGame":true,"inHand":true},"1":{"name":"eee","startingStack":10000,"effectiveStack":9940,"commited":60,"inGame":true,"inHand":true},"2":{"name":"fff","startingStack":10000,"effectiveStack":10000,"commited":0,"inGame":true,"inHand":true},"3":{"name":"iii","startingStack":10000,"effectiveStack":10000,"commited":0,"inGame":true,"inHand":true}}
+received: {"card1":"Jc","card2":"Kh"}
+received: {"sbPosition":0,"bbPosition":1,"dealerPosition":3}
+received: {"0":{"name":"ddd","startingStack":10000,"effectiveStack":9970,"strHole1":{"suit":"h","rank":"_2"},"strHole2":{"suit":"d","rank":"_9"},"commited":30,"inGame":true,"inHand":true},"1":{"name":"eee","startingStack":10000,"effectiveStack":9940,"strHole1":{"suit":"h","rank":"_6"},"strHole2":{"suit":"d","rank":"_5"},"commited":60,"inGame":true,"inHand":true},"2":{"name":"fff","startingStack":10000,"effectiveStack":10000,"strHole1":{"suit":"c","rank":"J"},"strHole2":{"suit":"h","rank":"K"},"commited":0,"inGame":true,"inHand":true},"3":{"name":"iii","startingStack":10000,"effectiveStack":10000,"strHole1":{"suit":"d","rank":"K"},"strHole2":{"suit":"c","rank":"_2"},"commited":0,"inGame":true,"inHand":true}}
+received: waitaction
+your turn: [examples: bet,30 call,30 raise,60 check,0 fold,0]
+call,60
+
+Process finished with exit code 130 (interrupted by signal 2: SIGINT)
