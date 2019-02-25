@@ -55,41 +55,6 @@ public class ConnectionManager extends WebSocketServer {
 
     @Override
     public void onMessage(WebSocket ws, String message) {
-
-//        // for cli client testing. use comma del string for simplicity
-//        if (message.startsWith("call")){
-//            String action = message.split(",")[0];
-//            String amount = message.split(",")[1];
-//
-//
-//            JsonObject ActionCommandJSON = new JsonObject();
-//            ActionCommandJSON.addProperty("action", "call");
-//            ActionCommandJSON.addProperty("amount", Integer.valueOf(amount));
-//            playerMoveUpdate.addProperty("player", player.getName());
-//            logger.info("player {} fold.", player.getName());
-//            alertAll(playerMoveUpdate.toString());
-//
-//            logger.info("register command accepted from {}.", getUserName(ws));
-//            String cmd = message.split(",")[0];
-//            String username = message.split(",")[1];
-//            String gamename = message.split(",")[2];
-//            lobbyManager.registerUser(username, gamename);
-//
-//
-//            Gson gson = new Gson();
-//            ActionCommand cmd = gson.fromJson(message, ActionCommand.class);
-//            Player player = connections.get(ws).getPlayer();
-//            logger.info("action JSON received from {}", player.getName());
-//            if (player.isWaitForAction()){
-//                player.setActionCommand(cmd);
-//                logger.info("{} action set for {}", cmd.getAction(), player.getName());
-//            } else {
-//                logger.warn("{} action received from {}, but player is not ready.", cmd.getAction(), player.getName());
-//            }
-//        }
-//
-
-
         if (message.contains("action")){
             Gson gson = new Gson();
             ActionCommand cmd = gson.fromJson(message, ActionCommand.class);
@@ -102,8 +67,6 @@ public class ConnectionManager extends WebSocketServer {
                 logger.warn("{} action received from {}, but player is not ready.", cmd.getAction(), player.getName());
             }
         }
-
-
         if (message.startsWith("login")){
             logger.info("login command accepted.");
             String cmd = message.split(",")[0];
@@ -131,9 +94,6 @@ public class ConnectionManager extends WebSocketServer {
 //            }
 //        }
 //
-
-
-
         if (message.startsWith("register")){
             logger.info("register command accepted from {}.", getUserName(ws));
             String cmd = message.split(",")[0];

@@ -77,13 +77,16 @@ public class PlayerDto {
 
     public String getStrHole1() {
         if (strHole1.equals("00")) return "  ";
-        if (strHole1.equals("XX")) return "XX";
+        //if (strHole1.equals("XX")) return "XX";
+        if (strHole1.equals("XX")) return "\u2680 ";
+
         return strHole1;
     }
 
     public String getStrHole2() {
         if (strHole2.equals("00")) return "  ";
-        if (strHole2.equals("XX")) return "XX";
+//        if (strHole2.equals("XX")) return "XX";
+        if (strHole2.equals("XX")) return "\u2680 ";
         return strHole2;
     }
 }

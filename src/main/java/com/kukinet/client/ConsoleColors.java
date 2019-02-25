@@ -80,4 +80,18 @@ public class ConsoleColors {
     // blink
     public static final String BLINK_BOLD = "\033[1;5m";   // BLINK BOLD
 
+
+    public static final String CARD_FG_RED = "\033[91m";   // RED
+    public static final String CARD_FG_BLUE= "\033[94m";   // BLUE
+    public static final String CARD_FG_GREEN= "\033[92m";   // GREEN
+    public static final String CARD_FG_WHITE= "\033[93m";   // YELLOW
+
 }
+//lumos ~/ echo -e '\u2660' #spade
+//        ♠
+//        lumos ~/ echo -e '\u2663' #club
+//        ♣
+//        lumos ~/ echo -e '\u2665' #heart
+//        ♥
+//        lumos ~/ echo -e '\u2666' #diamond
+//        ♦

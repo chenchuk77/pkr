@@ -20,6 +20,7 @@ public class Player {
     private int startingStack;
     private int effectiveStack;
     private int commited;
+    private boolean isChecking;
 
     private boolean inGame;
     private boolean inHand;
@@ -59,6 +60,7 @@ public class Player {
 
     public Player(String name){
         this.name=name;
+        this.isChecking=false;
         this.waitForAction=false;
         this.actionCommand=null;
         this.startingStack=10000;
@@ -103,6 +105,10 @@ public class Player {
     public void setWaitForAction(boolean waitForAction) {this.waitForAction = waitForAction;}
     public ActionCommand getActionCommand() {return actionCommand;}
     public void setActionCommand(ActionCommand actionCommand) {this.actionCommand = actionCommand;}
+    public void setCommited(int commited) {this.commited = commited;}
+
+    public boolean isChecking() {return isChecking;}
+    public void setChecking(boolean checking) {isChecking = checking;}
 
     public int getStartingStack() {return startingStack;}
     public void setStartingStack(int startingStack) {this.startingStack = startingStack;}
@@ -143,6 +149,17 @@ public class Player {
         } else {
             // all-in
             call(effectiveStack);
+        }
+        return 0 ;
+    }
+    public int bet(int amount){
+        if (amount <= effectiveStack ){
+            effectiveStack = effectiveStack - amount;
+            commited = commited + amount;
+            return amount;
+        } else {
+            // all-in
+            bet(effectiveStack);
         }
         return 0 ;
     }

@@ -68,7 +68,6 @@ public class ConsoleClient extends WebSocketClient {
     }
 
     public void parseTableStateJSON(JsonObject tableStateJSON){
-
         // build the table hashmap
         for (int i=0; i<4; i++) {
             // player
@@ -79,16 +78,11 @@ public class ConsoleClient extends WebSocketClient {
             if (jsonPlayer.getName().equals(USERNAME)){
                 // set ctx player if not exists
                 if (player == null){
-
                     player = jsonPlayer;
                     seat = i;
                     System.out.println("set player in context to " + player.getName());
-
-                    // override XX cards with my real cards
+                // override XX cards with my real cards
                 } else {
-//                    System.out.println("json c1 = " + jsonPlayer.getStrHole1());
-//                    System.out.println("me   c1 = " + player.getStrHole1());
-
                     if (jsonPlayer.getStrHole1().equals("XX")){
                         jsonPlayer.setStrHole1(player.getStrHole1());
                     }
@@ -99,40 +93,15 @@ public class ConsoleClient extends WebSocketClient {
             }
             table.put(i, jsonPlayer);
         }
-
-//        // update ctx player on start
-//        if (player == null) {
-//            player = getPlayerDtoByName(USERNAME);
-//            System.out.println("clint ctx player set.");
-//
-//        }
-
-//        // inject my hole cards if im in play
-//        PlayerDto me = getPlayerDtoByName(USERNAME);
-//        if (me.getStrHole1().equals("XX")){
-//            me.setStrHole1(player.getStrHole1());
-//        }
-//        if (me.getStrHole2().equals("XX")){
-//            me.setStrHole2(player.getStrHole2());
-//        }
-
-//        me.setStrHole2(player.getStrHole2());
-//
-//
-//                // if me
-//            if (playerName.equals(USERNAME)){
-//                if (player == null){
-//                    player = new PlayerDto(playerJSON);
-//                    table.put(i, player);
-//                }
-//            } else {
-//                table.put(i, new PlayerDto(playerJSON));
-//            }
-//        }
     }
 
 
-
+//    public void parseBetsJSON(JsonObject betsJSON) {
+//
+//        JsonObject betsJSON = betsJSON.getAsJsonObject(String.valueOf(i));
+//        //String playerName = playerJSON.get("name").getAsString();
+//        PlayerDto jsonPlayer = new PlayerDto(playerJSON);
+//    }
 
     @Override
     public void onOpen( ServerHandshake handshakedata ) {
@@ -147,35 +116,52 @@ public class ConsoleClient extends WebSocketClient {
         System.out.println( "received: " + message );
         // table update JSON
         if (message.length() > 300){
-            System.out.println( "incoming table update." );
             JsonObject jsonMessage = new Gson().fromJson(message, JsonObject.class);
-            //table = Utils.parseTableStateJSON(jsonMessage);
             parseTableStateJSON(jsonMessage);
+            System.out.println( "ctx table updated." );
             drawTable();
         }
         // bets update JSON
         if (message.contains("ante")){
-            JsonObject jsonMessage = new Gson().fromJson(message, JsonObject.class);
-            bets = Utils.parseBetsJSON(jsonMessage);
+            JsonObject betsJSON = new Gson().fromJson(message, JsonObject.class);
+            bets.put("ante", betsJSON.get("ante").getAsInt());
+            bets.put("sb", betsJSON.get("sb").getAsInt());
+            bets.put("bb", betsJSON.get("bb").getAsInt());
+            System.out.println( "ctx bets updated." );
+//            player.setStrHole2(betsJSON.get("card2").getAsString());
+//            System.out.println( "parsed as bets update." );
+//            JsonObject jsonMessage = new Gson().fromJson(message, JsonObject.class);
+//            bets = Utils.parseBetsJSON(jsonMessage);
+            drawTable();
         }
         // buttons update JSON
         if (message.contains("sbPosition")){
-            JsonObject jsonMessage = new Gson().fromJson(message, JsonObject.class);
-            buttons = Utils.parseButtonsJSON(jsonMessage);
+            JsonObject buttonsJSON = new Gson().fromJson(message, JsonObject.class);
+            bets.put("sbPosition", buttonsJSON.get("sbPosition").getAsInt());
+            bets.put("bbPosition", buttonsJSON.get("bbPosition").getAsInt());
+            bets.put("dealerPosition", buttonsJSON.get("dealerPosition").getAsInt());
+            System.out.println( "ctx buttons updated." );
+//            JsonObject jsonMessage = new Gson().fromJson(message, JsonObject.class);
+//            buttons = Utils.parseButtonsJSON(jsonMessage);
             drawTable();
         }
         // update ctx player with my hole cards
         if (message.contains("cards")){
-            JsonObject jsonMessage = new Gson().fromJson(message, JsonObject.class);
-            player.setStrHole1(jsonMessage.get("card1").getAsString());
-            player.setStrHole2(jsonMessage.get("card2").getAsString());
+            JsonObject cardsJSON = new Gson().fromJson(message, JsonObject.class);
+            player.setStrHole1(cardsJSON.get("card1").getAsString());
+            player.setStrHole2(cardsJSON.get("card2").getAsString());
+            System.out.println( "ctx cards updated." );
+            drawTable();
         }
         // update community cards
         if (message.contains("community")){
-            JsonObject jsonMessage = new Gson().fromJson(message, JsonObject.class);
-            communityCards.add(jsonMessage.get("flop1").getAsString());
-            communityCards.add(jsonMessage.get("flop2").getAsString());
-            communityCards.add(jsonMessage.get("flop3").getAsString());
+            JsonObject communityCardsJSON = new Gson().fromJson(message, JsonObject.class);
+            communityCards.add(communityCardsJSON.get("flop1").getAsString());
+            communityCards.add(communityCardsJSON.get("flop2").getAsString());
+            communityCards.add(communityCardsJSON.get("flop3").getAsString());
+            System.out.println( "ctx community-cards updated." );
+            drawTable();
+
         }
 
         // player move update JSON
@@ -247,15 +233,31 @@ public class ConsoleClient extends WebSocketClient {
     }
 
     private void play(){
+        JsonObject actionJSON = new JsonObject();
+
         // accepts comma-del string and convert to json
         Scanner scanner = new Scanner(System.in);
         System.out.println("your turn: [examples: bet,30 call,30 raise,60 check,0 fold,0]");
         String userAction = scanner.nextLine();
-        String action  = userAction.split(",")[0];
-        String amount = userAction.split(",")[1];
-        JsonObject actionJSON = new JsonObject();
-        actionJSON.addProperty("action", action);
-        actionJSON.addProperty("amount", Integer.valueOf(amount));
+
+        if (userAction.equals("call") || userAction.equals("c")){
+            actionJSON.addProperty("action", "call");
+            actionJSON.addProperty("amount", 0);
+        } else if (userAction.equals("fold") || userAction.equals("f")){
+            actionJSON.addProperty("action", "fold");
+            actionJSON.addProperty("amount", 0);
+        } else if (userAction.equals("raise") || userAction.equals("r")){
+            actionJSON.addProperty("action", "raise");
+            actionJSON.addProperty("amount", 0);
+        } else if (userAction.equals("check")){
+            actionJSON.addProperty("action", "check");
+            actionJSON.addProperty("amount", 0);
+        } else {
+            String action  = userAction.split(",")[0];
+            String amount = userAction.split(",")[1];
+            actionJSON.addProperty("action", action);
+            actionJSON.addProperty("amount", Integer.valueOf(amount));
+        }
         send(actionJSON.toString());
     }
 
@@ -263,11 +265,11 @@ public class ConsoleClient extends WebSocketClient {
     private void clearScreen(){
         //System.out.print(ConsoleColors.CLS);
         //System.out.print("\033\143");
-//        for (int i=0; i<24; i++){
-//            System.out.println();
-//        }
+        for (int i=0; i<24; i++){
+            System.out.println();
+        }
 
-                    System.out.println("##########################  TODO: CLEAR SCREEN  ################################");
+//                    System.out.println("##########################  TODO: CLEAR SCREEN  ################################");
     }
 
     private void drawTable(){
@@ -282,59 +284,134 @@ public class ConsoleClient extends WebSocketClient {
 
             // highlight active player
             if (i == activePlayerIndex){
-                color = ConsoleColors.WHITE_BOLD;
+                color = ConsoleColors.GREEN_BOLD;
                 // bold me
                 if (seat == activePlayerIndex){
-                    color += ConsoleColors.BLINK_BOLD;
+                    color = ConsoleColors.GREEN_BOLD + ConsoleColors.BLINK_BOLD;
                 }
             }
-
-            // blinks me
-
             PlayerDto p = table.get(i);
-            System.out.println(color + p.getName() + "\t" + ConsoleColors.RESET +
+            if (!p.inHand()){color = ConsoleColors.RED;}
+
+            System.out.println(color + p.getName() + "\t" +
+                   // System.out.println(color + p.getName() + "\t" + ConsoleColors.RESET +
                     p.getEffectiveStack() + "/" +
                     p.getStartingStack() + "\t" +
-                    p.commited() + "\t\t" +
-                    drawButtons(buttons, i) + "\t\t" +
-                    p.getStrHole1() + " " + p.getStrHole2() );
+                    (p.commited() == 0 ? " " : p.commited()) + "\t\t" +
+                    drawButtons(i) + "\t\t" + ConsoleColors.RESET +
+                    suitedCard(p.getStrHole1()) + " " + suitedCard(p.getStrHole2()));
 
         }
         System.out.println();
 
+
+
         // print community cards
         if (!communityCards.isEmpty()){
-            System.out.println(ConsoleColors.PURPLE_BOLD + "FLOP: " + communityCards.get(0) + " " +
-                    communityCards.get(1) + " " +
-                    communityCards.get(2) + ConsoleColors.RESET) ;
+
+            String ccards = suitedCard(communityCards.get(0)) + "   " +
+                            suitedCard(communityCards.get(1)) + "   " +
+                            suitedCard(communityCards.get(2)) + "     " ;
+            if (communityCards.size()>3) {
+                ccards += suitedCard(communityCards.get(3)) + "     " ;
+            }
+            if (communityCards.size()>4) {
+                ccards += suitedCard(communityCards.get(4));
+            }
+
+            System.out.println(ConsoleColors.PURPLE_BOLD + "flop : " + ccards + ConsoleColors.RESET);
+
+//            String turn = (communityCards.size()>3)
+//            String flop1 = communityCards.get(0);
+//            String flop1 = communityCards.get(0);
+
+
+//            System.out.println(ConsoleColors.PURPLE_BOLD + "FLOP: " +
+//                    suitedCard(communityCards.get(0)) + "  " +
+//                    suitedCard(communityCards.get(1)) + "  " +
+//                    suitedCard(communityCards.get(2)) + "     " +
+//                    (communityCards.size()>3) ? suitedCard(communityCards.get(3)) : "" + "     " +
+//                    suitedCard(communityCards.get(4)) + ConsoleColors.RESET) ;
         }
 
-        System.out.println(ConsoleColors.YELLOW_BOLD + "pot: " + pot + ConsoleColors.RESET);
+        System.out.println(ConsoleColors.YELLOW_BOLD + "pot  : " + pot + ConsoleColors.RESET);
         System.out.println();
 
 
     }
-    private static String drawButtons(Map<String ,Integer> buttons, int i) {
 
-        // game start
-        if (buttons == null){
+    private static final String SUIT_SPADE = "\u2660";
+    private static final String SUIT_CLUB = "\u2663";
+    private static final String SUIT_HEART = "\u2665";
+    private static final String SUIT_DIAMOND = "\u2666";
+    //private static final String CARD_BACK = "\U1f0a0";
+
+
+    public String suitedCard(String textCard){
+        if (textCard.endsWith("s")){
+            //return textCard.replace("c", SUIT_SPADE);
+            return ConsoleColors.CARD_FG_WHITE + textCard.charAt(0) + SUIT_SPADE + ConsoleColors.RESET;
+        }
+        if (textCard.endsWith("c")){
+//            return textCard.replace("c", SUIT_CLUB);
+            return ConsoleColors.CARD_FG_GREEN + textCard.charAt(0) + SUIT_CLUB + ConsoleColors.RESET;
+
+        }
+        if (textCard.endsWith("h")){
+//            return textCard.replace("c", SUIT_HEART);
+            return ConsoleColors.CARD_FG_RED + textCard.charAt(0) + SUIT_HEART + ConsoleColors.RESET;
+
+        }
+        if (textCard.endsWith("d")){
+//            return textCard.replace("c", SUIT_DIAMOND);
+            return ConsoleColors.CARD_FG_BLUE + textCard.charAt(0) + SUIT_DIAMOND + ConsoleColors.RESET;
+
+        }
+        return textCard;
+
+    }
+
+
+    private String drawButtons(int seatIndex) {
+        if (buttons == null) {
             return "    ";
         }
-        if (buttons.get("sbPosition")== null){
+        if (buttons.get("sbPosition") == null) {
             return "    ";
         }
-
-        if (buttons.get("sbPosition").equals(i)){
+        if (buttons.get("sbPosition") == seatIndex) {
             return "[SB]";
         }
-        if (buttons.get("bbPosition").equals(i)){
+        if (buttons.get("bbPosition") == seatIndex) {
             return "[BB]";
         }
-        if (buttons.get("dealerPosition").equals(i)){
+        if (buttons.get("dealerPosition") == seatIndex) {
             return "[DL]";
         }
         return "----";
     }
+//
+//        //if (seatIndex ==
+//
+//        // game start
+//        if (buttons == null){
+//            return "    ";
+//        }
+//        if (buttons.get("sbPosition")== null){
+//            return "    ";
+//        }
+//
+//        if (buttons.get("sbPosition").equals(i)){
+//            return "[SB]";
+//        }
+//        if (buttons.get("bbPosition").equals(i)){
+//            return "[BB]";
+//        }
+//        if (buttons.get("dealerPosition").equals(i)){
+//            return "[DL]";
+//        }
+//        return "----";
+//    }
 
     // global. used by client to recognize whoami
     public static String USERNAME;
