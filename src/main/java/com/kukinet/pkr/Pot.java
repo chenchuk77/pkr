@@ -16,11 +16,24 @@ public class Pot {
     }
 
 
-    // add a player bet and sort by commited, small first
+    // add/update a player bet and sort by commited, small first
     public void addBet(Bet bet){
+        Player p = bet.getPlayer();
+        for (Bet b: bets) {
+            // update bet if already exists from this player
+            if (b.getPlayer().equals(p)) {
+                b.getPlayer().setCommited(b.getPlayer().commited() + p.commited());
+                //bets.put(bets.get(0).getPlayer(), betValue/getNumOfWinners());
+                bets.sort(Comparator.comparing(x -> x.getPlayer().commited()));
+                return;
+            }
+        }
+        // add a new bet (first in this round from this player)
         bets.add(bet);
-        bets.sort(Comparator.comparing(p -> p.getPlayer().commited()));
+        bets.sort(Comparator.comparing(x -> x.getPlayer().commited()));
+
     }
+
 
     // get the best hand score to compare during a showdown
     private int getBestRank(){
@@ -61,7 +74,7 @@ public class Pot {
     }
 
     // if raise called totally (no side pot) then we can move the bets to the main pot and clear
-    private void clearBetsIfAllCalled(){
+    public void clearBetsIfAllCalled(){
         int smallestBet = bets.get(0).getPlayer().commited();
         int totalNumOfBets = bets.size();
         int count = 0;
@@ -71,10 +84,19 @@ public class Pot {
             }
         }
         if (count == totalNumOfBets){
-            mainPot += totalNumOfBets * smallestBet;
-            bets = new ArrayList<>();
+            this.mainPot += totalNumOfBets * smallestBet;
+            this.bets = new ArrayList<>();
         }
+    }
 
+    // collect all bets.
+    // in case a player didnt get called, he takes all pots with no showdown
+    public int getAllBets(){
+        int total = this.mainPot;
+        for (Bet b: bets){
+            total += b.getPlayer().commited();
+        }
+        return total;
     }
 
     // collect the win value from each sidepot and remove the bet if its 0 (means its already paid)
@@ -89,11 +111,18 @@ public class Pot {
         }
     }
 
+    // splitting all bets until it gets empty
+    public void splitPot() {
+        while (!bets.isEmpty()) {
+            splitSingleBet();
+        }
+    }
+
     // take the b0 (smallest) and see if p0 wins. if wins we credit him with that bet, and remove the bet.
     // we also need to take the same amount from all other side pots.
     // if not win, we add his bet to the main pot and remove the bet. since this bet removed, this player
     // cannot win any chips ( chips splitted ONLY between players in bets list ).
-    public void checkSingleBet(){
+    public void splitSingleBet(){
         // get smallest bet from top of bets list
         Player p = bets.get(0).getPlayer();
         int betValue = p.commited();
@@ -112,13 +141,22 @@ public class Pot {
         }
     }
 
-    public void splitPot() {
-        while (!bets.isEmpty()) {
-            checkSingleBet();
+    public Map<Player,Integer> singlePlayerWin(){
+        for (Bet b: bets){
+            Player p = b.getPlayer();
+            if (p.inHand()){
+                chipShare.put(p, getAllBets());
+                p.setStartingStack(p.getEffectiveStack());
+            }
         }
+        return chipShare;
     }
 
     public Map<Player,Integer> getPots(){
         return chipShare;
     }
+
+//    public int getMainPot() {
+//        return mainPot;
+//    }
 }

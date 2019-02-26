@@ -29,7 +29,8 @@ public class Table {
     private int bb;
 
     private int bet;
-    private int pot;
+//    private int pot;
+    private Pot pot;
     private boolean raisedPot;
 
     private int sbPosition;
@@ -163,13 +164,15 @@ public class Table {
     public void call(Player player, int requestedAmount){
         int amount = player.call(requestedAmount);
         logger.info("player {} call {}.", player.getName(), amount);
-        pot += amount;
+        pot.addBet(new Bet(amount, player));
+        //pot += amount;
         alertAll(sendPlayerMove("call", amount));
     }
     public void bet(Player player, int requestedAmount){
         int amount = player.bet(requestedAmount);
         logger.info("player {} bet {}.", player.getName(), amount);
-        pot += amount;
+        pot.addBet(new Bet(amount, player));
+        //pot += amount;
         raiser = player;
         raisedPot = true;
         alertAll(sendPlayerMove("call", amount));
@@ -178,7 +181,8 @@ public class Table {
     public void raise(Player player, int requestedAmount){
         int amount = player.raise(requestedAmount);
         logger.info("player {} raise {}.", player.getName(), amount);
-        pot += amount;
+        pot.addBet(new Bet(amount, player));
+//        pot += amount;
         raiser = player;
         raisedPot = true;
         alertAll(sendPlayerMove("raise", amount));
@@ -231,9 +235,11 @@ public class Table {
     }
 
     private void initHand(){
+        this.deck = new Deck();
+        this.pot = new Pot();
         moveButtons();
         this.bet = 0;
-        this.pot = 0;
+//        this.pot = 0;
         initBettingRound("preflop");
     }
 
@@ -273,11 +279,27 @@ public class Table {
         return true;
     }
 
+private void preparePlayersForNextHand(){
+    for (Player p: seats.values()){
+        if (p.inGame()){
+            p.setInHand(true);
+            logger.info("preparing for next hand.");
+
+            // the winner already handeled
+            if (! p.equals(activePlayer)){
+                p.setStartingStack(p.getEffectiveStack());
+                logger.info("{} is not winner, start-{} eff-{}", p.getName(), p.getStartingStack(), p.getEffectiveStack());
+            }
+        }
+    }
+
+}
 
     private void initBettingRound(String bettingRound){
         this.bettingRound = bettingRound;
 //        activePlayer = seats.get(sbPosition);
         setFirstPlayerToAct();
+        preparePlayersForNextHand();
         for (Player p: seats.values()){
             p.setCommited(0);
             p.setChecking(false);
@@ -389,12 +411,33 @@ public class Table {
         }
     }
 
-
     public String seats(){
         Gson gsonBuilder = new GsonBuilder().create();
         String json = gsonBuilder.toJson(seats);
         return json ;
     }
+
+    public String potShareAllFolded() {
+
+//        Gson gsonBuilder = new GsonBuilder().create();
+//        String json = gsonBuilder.toJson(pot.singlePlayerWin());
+//        return json;
+        JsonObject potshare = new JsonObject();
+        potshare.addProperty("type", "potshare");
+
+        Map<Player,Integer> chipshare = pot.singlePlayerWin();
+        for (Player p: chipshare.keySet()){
+            potshare.addProperty("player", p.getName());
+            potshare.addProperty("pot", chipshare.get(p));
+
+        }
+        return potshare.toString();
+    }
+
+//        JsonObject potshare = new JsonObject();
+//        bets.addProperty("ante", ante);
+//        bets.addProperty("sb", sb);
+//        bets.addProperty("bb", bb);
     public String buttonsPos() {
         JsonObject buttons = new JsonObject();
         buttons.addProperty("sbPosition", sbPosition);
@@ -409,6 +452,7 @@ public class Table {
         bets.addProperty("bb", bb);
         return bets.toString();
     }
+//    }
 
     public String sendPlayerMove(String command, int value){
         JsonObject playerMove = new JsonObject();
@@ -421,7 +465,8 @@ public class Table {
         playerMove.add("player", new Gson().toJsonTree(activePlayer));
         playerMove.addProperty("command", command);
         playerMove.addProperty("value", value);
-        playerMove.addProperty("pot", pot);
+//        playerMove.addProperty("pot", pot);
+        playerMove.addProperty("pot", pot.getAllBets());
         return playerMove.toString();
     }
 
@@ -454,8 +499,6 @@ public class Table {
                 // (exit when all folds)
                 while (playersInHand() > 1) {
                     logger.warn("new hand with {}/{} players (inhand/ingame).", playersInHand(), playersInGame());
-                    deck = new Deck();
-
                     initHand();               // set sb, bb, dealer buttons, active-player, fake raiser
                     alertAll(seats());
                     alertAll(betAmounts());
@@ -465,19 +508,35 @@ public class Table {
                     dealHands();
                     // preflop
                     logger.warn("preflop round starts.");
-                    while (!activePlayer.equals(raiser)) {
+                    while (!activePlayer.equals(raiser) && playersInHand()>1) {
+                        logger.info("in hand players: {}",playersInHand());
+
                         logger.info("preflop: raiser-{}/seat-{}, ap-{}/seat-{}, bb-{}/name-{}, raisedPot-{}", raiser.getName(), seatOf(raiser.getName()), activePlayer.getName(), seatOf(activePlayer.getName()), bbPosition, seats.get(bbPosition).getName(), raisedPot);
                         getActionFromPlayer();
                         activePlayer = nextPlayer();
                         // bb option. if no raise
-                        if (isBigBlind(activePlayer) && !raisedPot){
+                        if (isBigBlind(activePlayer) && !raisedPot && playersInHand()>1){
                             logger.info("preflop (bb option, no raise yet): raiser-{}/seat-{}, ap-{}/seat-{}, bb-{}/name-{}, raisedPot-{}", raiser.getName(), seatOf(raiser.getName()), activePlayer.getName(), seatOf(activePlayer.getName()), bbPosition, seats.get(bbPosition).getName(), raisedPot);
                             getActionFromPlayer();
                             activePlayer = nextPlayer();
                             raisedPot = true;
                         }
                     }
+                    // raiser didnt get called so this player get all
+                    if (playersInHand() == 1) {
+                        logger.info("preflop raiser-{}/seat-{} didnt get called", raiser.getName(), seatOf(raiser.getName()));
+                        logger.info("winner start-{}/effc-{} allbets-{}", activePlayer.getStartingStack(),activePlayer.getEffectiveStack(),pot.getAllBets());
 
+                        activePlayer.setStartingStack(activePlayer.getEffectiveStack() + pot.getAllBets());
+                        activePlayer.setEffectiveStack(activePlayer.getStartingStack());
+                        logger.info("winner start-{}/effc-{} allbets-{}", activePlayer.getStartingStack(),activePlayer.getEffectiveStack(),pot.getAllBets());
+
+                        alertAll(potShareAllFolded());
+                        preparePlayersForNextHand();
+                        logger.info("round end, no callers.");
+                        break;
+                    }
+                    pot.clearBetsIfAllCalled();
                     // dealing flop and bet
                     dealFlop();
                     logger.warn("flop round starts.");
@@ -518,10 +577,6 @@ public class Table {
                         getActionFromPlayer();
                         activePlayer = nextPlayer();
                     }
-
-
-
-
                 }
             }
         } catch ( Exception e){
@@ -536,13 +591,15 @@ public class Table {
     // get action (blocking) and broadcast the move
     private void getActionFromPlayer(){
         // force post sb
-        if (activePlayer.equals(seats.get(sbPosition)) && pot == 0){
-            pot += activePlayer.postSmallBlind(sb);
+        if (activePlayer.equals(seats.get(sbPosition)) && pot.getAllBets() == 0){
+            //pot += activePlayer.postSmallBlind(sb);
+            pot.addBet(new Bet(activePlayer.postSmallBlind(sb), activePlayer));
             alertAll(sendPlayerMove("sb", sb));
-           raiser = activePlayer;
+            raiser = activePlayer;
         // force post bb
-        } else if (activePlayer.equals(seats.get(bbPosition)) && pot <= sb){
-            pot += activePlayer.postBigBlind(bb);
+        } else if (activePlayer.equals(seats.get(bbPosition)) && pot.getAllBets() <= sb){
+            //pot += activePlayer.postBigBlind(bb);
+            pot.addBet(new Bet(activePlayer.postBigBlind(bb), activePlayer));
             alertAll(sendPlayerMove("bb", bb));
             raiser = activePlayer;
             raisedPot = false;
@@ -551,12 +608,4 @@ public class Table {
             waitPlayerCommand(activePlayer);
         }
     }
-
-
-//    private int getMainPot(){
-//
-//        for (Player p: seats.values()){
-//
-//        }
-//    }
 }
