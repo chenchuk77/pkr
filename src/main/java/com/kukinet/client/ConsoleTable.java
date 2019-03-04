@@ -58,7 +58,7 @@ public class ConsoleTable {
 //            for (int i=0; i<4; i++){
 //                PlayerDto p = table.get(i);
 //                System.out.println(p.getName() + "\t\t" +
-//                        p.getEffectiveStack() + "/" +
+//                        p.getChips() + "/" +
 //                        p.getStartingStack() + "\t" +
 //                        p.commited() + "\t\t" +
 //                        drawButtons(buttons, i) + "\t\t" +
@@ -78,7 +78,7 @@ public class ConsoleTable {
 
 //            for(Player p: table.values()){
 //
-//                System.out.println(p.getName() + "\t\t" + p.getEffectiveStack() + "/" +
+//                System.out.println(p.getName() + "\t\t" + p.getChips() + "/" +
 //                        p.getStartingStack() + "\t" + p.commited() );
 //            }
 //

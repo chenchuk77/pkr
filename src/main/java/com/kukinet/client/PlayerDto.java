@@ -8,8 +8,8 @@ import com.google.gson.JsonObject;
 public class PlayerDto {
 
     private String name;
-    private int startingStack;
-    private int effectiveStack;
+//    private int startingStack;
+    private int chips;
     private int commited;
     private boolean inGame;
     private boolean inHand;
@@ -19,7 +19,7 @@ public class PlayerDto {
 //    public PlayerDto(JsonObject jsonObject, String hc1, String hc2){
 //        this.name = jsonObject.get("name").getAsString();
 //        this.startingStack = jsonObject.get("startingStack").getAsInt();
-//        this.effectiveStack = jsonObject.get("effectiveStack").getAsInt();
+//        this.chips = jsonObject.get("chips").getAsInt();
 //        this.commited = jsonObject.get("commited").getAsInt();
 //        this.inGame = jsonObject.get("inGame").getAsBoolean();
 //        this.inHand = jsonObject.get("inHand").getAsBoolean();
@@ -29,7 +29,7 @@ public class PlayerDto {
 //public PlayerDto(JsonObject jsonObject){
 //    this.name = jsonObject.get("name").getAsString();
 //    this.startingStack = jsonObject.get("startingStack").getAsInt();
-//    this.effectiveStack = jsonObject.get("effectiveStack").getAsInt();
+//    this.chips = jsonObject.get("chips").getAsInt();
 //    this.commited = jsonObject.get("commited").getAsInt();
 //    this.inGame = jsonObject.get("inGame").getAsBoolean();
 //    this.inHand = jsonObject.get("inHand").getAsBoolean();
@@ -39,8 +39,8 @@ public class PlayerDto {
 
     public PlayerDto(JsonObject jsonObject){
         this.name = jsonObject.get("name").getAsString();
-        this.startingStack = jsonObject.get("startingStack").getAsInt();
-        this.effectiveStack = jsonObject.get("effectiveStack").getAsInt();
+//        this.startingStack = jsonObject.get("startingStack").getAsInt();
+        this.chips = jsonObject.get("chips").getAsInt();
         this.commited = jsonObject.get("commited").getAsInt();
         this.inGame = jsonObject.get("inGame").getAsBoolean();
         this.inHand = jsonObject.get("inHand").getAsBoolean();
@@ -54,10 +54,10 @@ public class PlayerDto {
 //
 
     public int commited(){ return this.commited; }
-    public int getStartingStack() {return startingStack;}
-    public void setStartingStack(int startingStack) {this.startingStack = startingStack;}
-    public int getEffectiveStack() {return effectiveStack;}
-    public void setEffectiveStack(int effectiveStack) {this.effectiveStack = effectiveStack;}
+//    public int getStartingStack() {return startingStack;}
+//    public void setStartingStack(int startingStack) {this.startingStack = startingStack;}
+    public int getChips() {return chips;}
+    public void setChips(int chips) {this.chips = chips;}
     public String getName() {return name;}
     public boolean inHand(){ return this.inHand; }
     public boolean inGame(){ return this.inGame; }
@@ -69,8 +69,11 @@ public class PlayerDto {
 
         this.inHand = inHand;
         if (!inHand){
+            System.out.println("im not inHand ! ,my cards were: " + strHole1 + " - " + strHole2);
+
             this.strHole1 = "00";
             this.strHole2 = "00";
+            System.out.println("im not inHand ! ,my cards now : " + strHole1 + " - " + strHole2);
 
         }
     }

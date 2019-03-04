@@ -80,10 +80,10 @@ public class ConnectionManager extends WebSocketServer {
                 logger.warn("no such user: {}.", username);
             }
         }
-//        if (message.startsWith("logout")){
+//        if (status.startsWith("logout")){
 //            logger.info("logout command accepted.");
-//            String cmd = message.split(",")[0];
-//            String username = message.split(",")[1];
+//            String cmd = status.split(",")[0];
+//            String username = status.split(",")[1];
 //            User user = loginService.login(username, password);
 //            if (user != null){
 //                connections.put(ws, new Connection(user, ws));
@@ -102,25 +102,25 @@ public class ConnectionManager extends WebSocketServer {
             lobbyManager.registerUser(username, gamename);
         }
 
-//        if (message.startsWith("create-game")){
+//        if (status.startsWith("create-game")){
 //            logger.info("create-game command accepted from {}.", getUserName(ws));
-//            String cmd = message.split(",")[0];
-//            String name = message.split(",")[1];
-//            String price = message.split(",")[2];
+//            String cmd = status.split(",")[0];
+//            String name = status.split(",")[1];
+//            String price = status.split(",")[2];
 //            lobbyManager.createGame(name, price, this);
 //        }
-//        if (message.startsWith("start-game")){
+//        if (status.startsWith("start-game")){
 //            logger.info("start-game command accepted from {}.", getUserName(ws));
-//            String cmd = message.split(",")[0];
-//            String name = message.split(",")[1];
+//            String cmd = status.split(",")[0];
+//            String name = status.split(",")[1];
 //            lobbyManager.startGame(name);
 //        }
 
 //        // notification mechanism
-//        if (message.startsWith("action")){
+//        if (status.startsWith("action")){
 //            logger.info("actionCommand accepted.");   /// action,call,30
-//            String action = message.split(",")[1];
-//            String amount = message.split(",")[2];
+//            String action = status.split(",")[1];
+//            String amount = status.split(",")[2];
 //            Player player = connections.get(ws).getPlayer();
 //            if (player.isWaitForAction()){
 //                ActionCommand cmd = new ActionCommand();

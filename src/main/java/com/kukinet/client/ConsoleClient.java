@@ -2,9 +2,7 @@ package com.kukinet.client;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.kukinet.pkr.Player;
 import org.java_websocket.client.WebSocketClient;
-import org.java_websocket.drafts.Draft;
 import org.java_websocket.handshake.ServerHandshake;
 
 import java.net.URI;
@@ -22,6 +20,7 @@ public class ConsoleClient extends WebSocketClient {
     private List<String> communityCards;
 //    private int nextPlayerSeat;
     private int activePlayerIndex;
+    private String statusMessage;
 //    private Map<String, Integer> bets;
 
 
@@ -36,12 +35,19 @@ public class ConsoleClient extends WebSocketClient {
 //    }
     public ConsoleClient(URI serverURI) {
         super( serverURI );
+        initHand();
+    }
+    private void initHand(){
+        System.out.println("init client for a new hand.");
+        // table will be refreshed after every "new hand"
+        player = null;
         table = new HashMap<>();
         buttons = new HashMap<>();
         bets = new HashMap<>();
         pot = 0;
         activePlayerIndex = 0;
         communityCards = new ArrayList<>();
+        statusMessage = "";
     }
 
 //    private void nextPlayer(){
@@ -130,7 +136,7 @@ public class ConsoleClient extends WebSocketClient {
             System.out.println( "ctx bets updated." );
 //            player.setStrHole2(betsJSON.get("card2").getAsString());
 //            System.out.println( "parsed as bets update." );
-//            JsonObject jsonMessage = new Gson().fromJson(message, JsonObject.class);
+//            JsonObject jsonMessage = new Gson().fromJson(status, JsonObject.class);
 //            bets = Utils.parseBetsJSON(jsonMessage);
             drawTable();
         }
@@ -141,12 +147,14 @@ public class ConsoleClient extends WebSocketClient {
             bets.put("bbPosition", buttonsJSON.get("bbPosition").getAsInt());
             bets.put("dealerPosition", buttonsJSON.get("dealerPosition").getAsInt());
             System.out.println( "ctx buttons updated." );
-//            JsonObject jsonMessage = new Gson().fromJson(message, JsonObject.class);
+//            JsonObject jsonMessage = new Gson().fromJson(status, JsonObject.class);
 //            buttons = Utils.parseButtonsJSON(jsonMessage);
             drawTable();
         }
         // update ctx player with my hole cards
         if (message.contains("cards")){
+//            System.out.println( "got cards. player.getStrHole1()=" +player.getStrHole1() );
+//            System.out.println( "got cards. player.getStrHole2()=" +player.getStrHole2() );
             JsonObject cardsJSON = new Gson().fromJson(message, JsonObject.class);
             player.setStrHole1(cardsJSON.get("card1").getAsString());
             player.setStrHole2(cardsJSON.get("card2").getAsString());
@@ -155,10 +163,17 @@ public class ConsoleClient extends WebSocketClient {
         }
         // update community cards
         if (message.contains("community")){
+            communityCards = new ArrayList<>();
             JsonObject communityCardsJSON = new Gson().fromJson(message, JsonObject.class);
             communityCards.add(communityCardsJSON.get("flop1").getAsString());
             communityCards.add(communityCardsJSON.get("flop2").getAsString());
             communityCards.add(communityCardsJSON.get("flop3").getAsString());
+            if (communityCardsJSON.has("turn")){
+                communityCards.add(communityCardsJSON.get("turn").getAsString());
+            }
+            if (communityCardsJSON.has("river")){
+                communityCards.add(communityCardsJSON.get("river").getAsString());
+            }
             System.out.println( "ctx community-cards updated." );
             drawTable();
 
@@ -218,6 +233,27 @@ public class ConsoleClient extends WebSocketClient {
                 play();
             }
         }
+        // update ctx player with my hole cards
+        if (message.contains("status")) {
+            System.out.println("status update received.");
+            JsonObject statusJSON = new Gson().fromJson(message, JsonObject.class);
+            statusMessage = statusJSON.get("value").getAsString();
+            drawTable();
+
+        }
+
+        // update ctx player with my hole cards
+        if (message.contains("new hand")){
+            System.out.println( "starting a new hand");
+//            System.out.println( "got cards. player.getStrHole2()=" +player.getStrHole2() );
+//            JsonObject cardsJSON = new Gson().fromJson(status, JsonObject.class);
+//            player.setStrHole1(cardsJSON.get("card1").getAsString());
+//            player.setStrHole2(cardsJSON.get("card2").getAsString());
+//            System.out.println( "ctx cards updated." );
+//            drawTable();
+            initHand();
+        }
+
     }
 
     @Override
@@ -249,7 +285,7 @@ public class ConsoleClient extends WebSocketClient {
         } else if (userAction.equals("raise") || userAction.equals("r")){
             actionJSON.addProperty("action", "raise");
             actionJSON.addProperty("amount", 0);
-        } else if (userAction.equals("check")){
+        } else if (userAction.equals("check") || userAction.equals("k")){
             actionJSON.addProperty("action", "check");
             actionJSON.addProperty("amount", 0);
         } else {
@@ -276,38 +312,51 @@ public class ConsoleClient extends WebSocketClient {
         // exit if no table yet
 //        if (table == null) return;
 //        if (table.get(0) == null) return;
-        clearScreen();
-        System.out.println(ConsoleColors.CYAN_BOLD + "name" + "\t" + "efctv" + "/" + "start" + "\t" + "commit" + ConsoleColors.RESET);
+        //clearScreen();
+//        System.out.println(ConsoleColors.CYAN_BOLD + "name" + "\t" + "efctv" + "/" + "start" + "\t" + "commit" + ConsoleColors.RESET);
+
+        System.out.println(ConsoleColors.CYAN_BOLD + "name" + "\t" + "chips" + "\t" + "commited" + ConsoleColors.RESET);
 
         for (int i=0; i<4; i++){
             String color = ConsoleColors.RESET;
-
+            //String cards = "";
             // highlight active player
             if (i == activePlayerIndex){
                 color = ConsoleColors.GREEN_BOLD;
                 // bold me
                 if (seat == activePlayerIndex){
                     color = ConsoleColors.GREEN_BOLD + ConsoleColors.BLINK_BOLD;
+                   // cards =
+
                 }
             }
             PlayerDto p = table.get(i);
             if (!p.inHand()){color = ConsoleColors.RED;}
 
+            // elvis checking if its me (if player in update is ctx player), to show cards
             System.out.println(color + p.getName() + "\t" +
-                   // System.out.println(color + p.getName() + "\t" + ConsoleColors.RESET +
-                    p.getEffectiveStack() + "/" +
-                    p.getStartingStack() + "\t" +
+                    p.getChips() + "\t" +
                     (p.commited() == 0 ? " " : p.commited()) + "\t\t" +
                     drawButtons(i) + "\t\t" + ConsoleColors.RESET +
-                    suitedCard(p.getStrHole1()) + " " + suitedCard(p.getStrHole2()));
-
+                    ((p.getName().equals(player.getName())) ?
+                            suitedCard(player.getStrHole1()) + " " + suitedCard(player.getStrHole2()) :
+                            suitedCard(p.getStrHole1()) + " " + suitedCard(p.getStrHole2())));
         }
         System.out.println();
 
 
+//        private String drawCards(){
+//            // if me
+//            if (seat == activePlayerIndex){
+//                return "" + suitedCard(player.getStrHole1()) + " " + suitedCard(player.getStrHole2());
+//            }
+//            return;
+//        }
+
 
         // print community cards
         if (!communityCards.isEmpty()){
+            System.out.println("----- community cards: " + communityCards.size());
 
             String ccards = suitedCard(communityCards.get(0)) + "   " +
                             suitedCard(communityCards.get(1)) + "   " +
@@ -337,6 +386,14 @@ public class ConsoleClient extends WebSocketClient {
         System.out.println(ConsoleColors.YELLOW_BOLD + "pot  : " + pot + ConsoleColors.RESET);
         System.out.println();
 
+        System.out.println(ConsoleColors.WHITE_BOLD_BRIGHT + statusMessage);
+        System.out.println(ConsoleColors.RESET);
+        System.out.println();
+
+//        System.out.println( "got cards. player.getStrHole1()=" +player.getStrHole1() );
+//        System.out.println( "got cards. player.getStrHole2()=" +player.getStrHole2() );
+
+
 
     }
 
@@ -346,6 +403,8 @@ public class ConsoleClient extends WebSocketClient {
     private static final String SUIT_DIAMOND = "\u2666";
     //private static final String CARD_BACK = "\U1f0a0";
 
+
+//    private String cardsOfS
 
     public String suitedCard(String textCard){
         if (textCard.endsWith("s")){

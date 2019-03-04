@@ -21,6 +21,8 @@ public class Table {
     private static final int MIN_PLAYERS = 2;
     private static final int MAX_PLAYERS = 4;
 
+    private int handNumber;
+
     private int roundTime = 10 * 60; // 10 minutes for round
 
     // will be changed dynamically
@@ -58,6 +60,7 @@ public class Table {
         this.bbPosition = 0;
         this.dealerPosition = players.size()-2;
         this.index = 0;
+        this.handNumber = 0;
     }
 
     private void seatPlayers(List<Player> players){
@@ -147,12 +150,15 @@ public class Table {
     // --------------- player action commands ----------------
     public void fold(Player player)   {
         player.fold();
+        pot.removeBet(player);
         logger.info("player {} fold.", player.getName());
+        alertAll(status(player.getName() + " fold."));
         alertAll(sendPlayerMove("fold", 0));
     }
 
     public void check(Player player){
         logger.info("player {} check.", player.getName());
+        alertAll(status(player.getName() + " check."));
         alertAll(sendPlayerMove("check", 0));
     }
 
@@ -166,6 +172,7 @@ public class Table {
         logger.info("player {} call {}.", player.getName(), amount);
         pot.addBet(new Bet(amount, player));
         //pot += amount;
+        alertAll(status(player.getName() + " call " + amount + "."));
         alertAll(sendPlayerMove("call", amount));
     }
     public void bet(Player player, int requestedAmount){
@@ -175,7 +182,9 @@ public class Table {
         //pot += amount;
         raiser = player;
         raisedPot = true;
-        alertAll(sendPlayerMove("call", amount));
+        logger.info("finish bet logic: ap {} raiser {}.", activePlayer.getName(), player.getName());
+        alertAll(status(player.getName() + " bet " + amount + "."));
+        alertAll(sendPlayerMove("bet", amount));
     }
 
     public void raise(Player player, int requestedAmount){
@@ -185,6 +194,7 @@ public class Table {
 //        pot += amount;
         raiser = player;
         raisedPot = true;
+        alertAll(status(player.getName() + " raise to " + amount + "."));
         alertAll(sendPlayerMove("raise", amount));
     }
 
@@ -204,21 +214,41 @@ public class Table {
         return count;
     }
 
+    // if only 1 player reminded with chips - no need to bet (showdown anyway)
+    private boolean betRoundNeeded(){
+        int numOfPlayersWithChipsBehind = 0;
+        for (Map.Entry<Integer, Player> entry: seats.entrySet()){
+            if (entry.getValue().inHand() && entry.getValue().getChips() > 0 ) {
+                numOfPlayersWithChipsBehind ++;
+            }
+        }
+        return numOfPlayersWithChipsBehind > 1;
+    }
+
+
     // pointing to next player to act
     private Player nextPlayer(){
 
+        int index = seatOf(activePlayer.getName());
+        logger.info("nextplayer func: starting with ap:{} index:{}", activePlayer.getName(), index);
         if (index == MAX_PLAYERS-1) {
             index = 0;
         } else {
             index++;
         }
-        Player p = seats.get(index);
+//        Player p = seats.get(index);
+        activePlayer = seats.get(index);
+        logger.info("checking player:{} ", activePlayer.getName());
 
         // recursively look for the next inHand player
-        if (!p.inHand()){
-            p = nextPlayer();
+        if (!activePlayer.inHand()){
+        //while (!activePlayer.inHand()){
+                logger.info("player {} is inhand:{} trying next...", activePlayer.getName(), activePlayer.inHand());
+            activePlayer = nextPlayer();
         }
-        return p;
+        logger.info("ap found - player {} (inhand:{})", activePlayer.getName(), activePlayer.inHand());
+
+        return activePlayer;
     }
 
 
@@ -235,8 +265,22 @@ public class Table {
     }
 
     private void initHand(){
+        this.handNumber ++;
+
+//        alertAll(status("newhand");
+        this.communityCards = null;
         this.deck = new Deck();
-        this.pot = new Pot();
+        this.pot = new Pot(new ArrayList<Player>(seats.values()));
+        for (Player p: seats.values()){
+            if (p.inGame()){
+                p.setInHand(true);
+//                p.setHoleCard1(null);
+//                p.setHoleCard2(null);
+//                p.setHand(null);
+                p.muckCards();
+            }
+        }
+
         moveButtons();
         this.bet = 0;
 //        this.pot = 0;
@@ -246,13 +290,18 @@ public class Table {
     // starting from sb (if sb not in hand, goto the next inhand player)
     private void setFirstPlayerToAct(){
         int fp = sbPosition;
+        logger.info("looking for starter , sb-{}.", sbPosition);
+
         for (int i=0; i<MAX_PLAYERS; i++){
             // after seat8 comes seat0
             if (fp + i >=MAX_PLAYERS ){
                 fp = fp + i - MAX_PLAYERS;
             }
-            activePlayer = seats.get(fp);
+            activePlayer = seats.get(fp+i);
+            logger.info("trying player-{} inhand-{}.", activePlayer.getName(),activePlayer.inHand());
+
             if (activePlayer.inGame() && activePlayer.inHand()){
+                logger.info("find starter: player-{} .", activePlayer.getName());
                 return;
             }
         }
@@ -280,26 +329,29 @@ public class Table {
     }
 
 private void preparePlayersForNextHand(){
+    logger.info("preparing for next hand, clearing cards and remove losing players.");
     for (Player p: seats.values()){
-        if (p.inGame()){
-            p.setInHand(true);
-            logger.info("preparing for next hand.");
+        p.setHoleCard1(null);
+        p.setHoleCard2(null);
 
-            // the winner already handeled
-            if (! p.equals(activePlayer)){
-                p.setStartingStack(p.getEffectiveStack());
-                logger.info("{} is not winner, start-{} eff-{}", p.getName(), p.getStartingStack(), p.getEffectiveStack());
-            }
+        if (p.getChips() <= 0) p.setInGame(false);
+        if (p.inGame()) p.setInHand(true);
+
+//            // the winner already handeled
+//            if (! p.equals(activePlayer)){
+//                p.setStartingStack(p.getChips());
+//                logger.info("{} is not winner, start-{} eff-{}", p.getName(), p.getStartingStack(), p.getChips());
+//            }
         }
     }
 
-}
 
     private void initBettingRound(String bettingRound){
         this.bettingRound = bettingRound;
 //        activePlayer = seats.get(sbPosition);
+//        index = sbPosition;
         setFirstPlayerToAct();
-        preparePlayersForNextHand();
+        //preparePlayersForNextHand();
         for (Player p: seats.values()){
             p.setCommited(0);
             p.setChecking(false);
@@ -452,7 +504,35 @@ private void preparePlayersForNextHand(){
         bets.addProperty("bb", bb);
         return bets.toString();
     }
+    public String status(String statusMessage) {
+        JsonObject messageJSON = new JsonObject();
+        messageJSON.addProperty("type", "status");
+        messageJSON.addProperty("value", statusMessage);
+        return messageJSON.toString();
+    }
+
+
 //    }
+
+    private String chipshare() {
+        Map<Player ,Integer> chipshareMap = pot.splitPot();
+        JsonObject chipshareJSON = new JsonObject();
+        chipshareJSON.addProperty("type", "potshare");
+
+        for (Player p: chipshareMap.keySet()){
+            chipshareJSON.addProperty(p.getName(), chipshareMap.get(p));
+
+//            chipshareJSON.addProperty("player", p.getName());
+//            chipshareJSON.addProperty("pot", chipshareMap.get(p));
+
+        }
+        return chipshareJSON.toString();
+
+
+//        Gson gsonBuilder = new GsonBuilder().create();
+//        String chipshareJSON = gsonBuilder.toJson(chipshare);
+//        return chipshareJSON ;
+    }
 
     public String sendPlayerMove(String command, int value){
         JsonObject playerMove = new JsonObject();
@@ -470,6 +550,49 @@ private void preparePlayersForNextHand(){
         return playerMove.toString();
     }
 
+    public String showdown(){
+        JsonObject showdownJSON = new JsonObject();
+        showdownJSON.addProperty("type", "showdown");
+        for (Map.Entry<Integer, Player> entry: seats.entrySet()){
+            Player p = entry.getValue();
+            if (p.inHand()){
+                String hand = p.getHoleCards(); // as 4 digit string
+                showdownJSON.addProperty(p.getName(), hand);
+            }
+        }
+        return showdownJSON.toString();
+    }
+
+    public void rankHands(){
+        logger.warn("ranking hands...");
+
+        // collect all community cards
+        String communityCardsString = "";
+        for (Card card: communityCards){
+            communityCardsString += card.toString();
+        }
+        logger.warn("communityCardsString: {}", communityCardsString);
+
+        // append player hole cards and rank hand
+        for (Player p: seats.values()){
+            if (p.inHand()){
+                String playerCardsString = communityCardsString + p.getHoleCards();
+                Hand playerHand = Dealer.rankHand(playerCardsString);
+                p.setHand(playerHand);
+                logger.warn("player:{} has:{} (value:{}) cards:{}",
+                        p.getName(),
+                        p.getHand().getHandName(),
+                        p.getHand().getValue(),
+                        playerCardsString);
+//                p.setHandValue
+            }
+        }
+        logger.warn("finish ranking hands.");
+
+    }
+
+//
+
 
 
     // alertAll all connected players
@@ -480,6 +603,7 @@ private void preparePlayersForNextHand(){
 
     // alertAll all connected players
     private void alertAll(String message){
+        logger.info("alerting all: {}", message);
         //for (Player activePlayer : players) {
         for (Player player: seats.values()){
             WebSocket ws = connectionManager.getPlayerConnetion(player);
@@ -500,6 +624,10 @@ private void preparePlayersForNextHand(){
                 while (playersInHand() > 1) {
                     logger.warn("new hand with {}/{} players (inhand/ingame).", playersInHand(), playersInGame());
                     initHand();               // set sb, bb, dealer buttons, active-player, fake raiser
+                    alertAll(status("new hand # " + handNumber));
+                    alertAll(seats());
+                    Thread.sleep(3000);
+//                    alertAll(status("new hand starting..."));
                     alertAll(seats());
                     alertAll(betAmounts());
                     alertAll(buttonsPos());
@@ -507,81 +635,160 @@ private void preparePlayersForNextHand(){
                     // dealing hands and betting preflop
                     dealHands();
                     // preflop
-                    logger.warn("preflop round starts.");
+                    logger.error("--- PRE-FLOP ROUND STARTED ---.");
                     while (!activePlayer.equals(raiser) && playersInHand()>1) {
                         logger.info("in hand players: {}",playersInHand());
-
                         logger.info("preflop: raiser-{}/seat-{}, ap-{}/seat-{}, bb-{}/name-{}, raisedPot-{}", raiser.getName(), seatOf(raiser.getName()), activePlayer.getName(), seatOf(activePlayer.getName()), bbPosition, seats.get(bbPosition).getName(), raisedPot);
                         getActionFromPlayer();
                         activePlayer = nextPlayer();
                         // bb option. if no raise
-                        if (isBigBlind(activePlayer) && !raisedPot && playersInHand()>1){
-                            logger.info("preflop (bb option, no raise yet): raiser-{}/seat-{}, ap-{}/seat-{}, bb-{}/name-{}, raisedPot-{}", raiser.getName(), seatOf(raiser.getName()), activePlayer.getName(), seatOf(activePlayer.getName()), bbPosition, seats.get(bbPosition).getName(), raisedPot);
+                        if (isBigBlind(activePlayer) && !raisedPot && playersInHand() >= 2){
+                            logger.info("preflop: (bb option, no raise yet): raiser-{}/seat-{}, ap-{}/seat-{}, bb-{}/name-{}, raisedPot-{}", raiser.getName(), seatOf(raiser.getName()), activePlayer.getName(), seatOf(activePlayer.getName()), bbPosition, seats.get(bbPosition).getName(), raisedPot);
                             getActionFromPlayer();
+                            if (activePlayer.isChecking()) continue;
                             activePlayer = nextPlayer();
                             raisedPot = true;
                         }
                     }
-                    // raiser didnt get called so this player get all
-                    if (playersInHand() == 1) {
-                        logger.info("preflop raiser-{}/seat-{} didnt get called", raiser.getName(), seatOf(raiser.getName()));
-                        logger.info("winner start-{}/effc-{} allbets-{}", activePlayer.getStartingStack(),activePlayer.getEffectiveStack(),pot.getAllBets());
-
-                        activePlayer.setStartingStack(activePlayer.getEffectiveStack() + pot.getAllBets());
-                        activePlayer.setEffectiveStack(activePlayer.getStartingStack());
-                        logger.info("winner start-{}/effc-{} allbets-{}", activePlayer.getStartingStack(),activePlayer.getEffectiveStack(),pot.getAllBets());
-
+                    if (allOtherFolded()){
+                        activePlayer.setChips(activePlayer.getChips() + pot.getAllBets());
+                        logger.info("preflop: raiser-{}/seat-{} didnt get called", raiser.getName(), seatOf(raiser.getName()));
                         alertAll(potShareAllFolded());
                         preparePlayersForNextHand();
-                        logger.info("round end, no callers.");
-                        break;
+                        logger.info("preflop: round end, no callers.");
+                        continue;
                     }
                     pot.clearBetsIfAllCalled();
+                    pot.refundUncoveredBet();
+
                     // dealing flop and bet
+                    alertAll(status("dealing flop"));
                     dealFlop();
-                    logger.warn("flop round starts.");
-                    // flop
+                    Thread.sleep(3000);
                     initBettingRound("flop");
-                    while (!activePlayer.equals(raiser)) {
+                    while (!activePlayer.equals(raiser) && betRoundNeeded()) {
                         logger.info("flop: raiser-{}/seat-{}, ap-{}/seat-{}, bb-{}/name-{}, raisedPot-{}", raiser.getName(), seatOf(raiser.getName()), activePlayer.getName(), seatOf(activePlayer.getName()), bbPosition, seats.get(bbPosition).getName(), raisedPot);
                         getActionFromPlayer();
                         activePlayer = nextPlayer();
+                        logger.info("flop: ap is now {}/seat-{}",activePlayer.getName(), seatOf(activePlayer.getName()));
                         if (allPlayerChecked()){
                             logger.info("flop: all players checked, exit round");
                             break;
                         }
-                        logger.info("flop: while loop end. ap={}, raiser={}",activePlayer.getName(),raiser.getName());
-
                     }
+                    if (allOtherFolded()){
+                        activePlayer.setChips(activePlayer.getChips() + pot.getAllBets());
+                        logger.info("preflop: raiser-{}/seat-{} didnt get called", raiser.getName(), seatOf(raiser.getName()));
+                        alertAll(potShareAllFolded());
+                        preparePlayersForNextHand();
+                        logger.info("preflop: round end, no callers.");
+                        continue;
+                    }
+                    pot.clearBetsIfAllCalled();
+                    pot.refundUncoveredBet();
 
                     // dealing turn and bet
+                    alertAll(status("dealing turn"));
                     dealTurn();
-                    logger.warn("turn round starts.");
-                    // turn
+                    Thread.sleep(3000);
                     initBettingRound("turn");
-                    while (!activePlayer.equals(raiser)) {
-                        logger.warn("raiser is {}/{}, activePlayer is {}/{}", seatOf(raiser.getName()), raiser.getName(), seatOf(activePlayer.getName()), activePlayer.getName()  );
+                    while (!activePlayer.equals(raiser) && betRoundNeeded()) {
+                        logger.warn("turn: raiser is {}/{}, activePlayer is {}/{}", seatOf(raiser.getName()), raiser.getName(), seatOf(activePlayer.getName()), activePlayer.getName()  );
                         getActionFromPlayer();
                         activePlayer = nextPlayer();
-                        logger.warn("turn while loop. raiser is {}/{}, activePlayer is {}/{}", seatOf(raiser.getName()), raiser.getName(), seatOf(activePlayer.getName()), activePlayer.getName()  );
-
+                        logger.info("turn: ap is now {}/seat-{}",activePlayer.getName(), seatOf(activePlayer.getName()));
+                        if (allPlayerChecked()){
+                            logger.info("turn: all players checked, exit round");
+                            break;
+                        }
                     }
+                    if (allOtherFolded()){
+                        activePlayer.setChips(activePlayer.getChips() + pot.getAllBets());
+                        logger.info("preflop: raiser-{}/seat-{} didnt get called", raiser.getName(), seatOf(raiser.getName()));
+                        alertAll(potShareAllFolded());
+                        preparePlayersForNextHand();
+                        logger.info("preflop: round end, no callers.");
+                        continue;
+                    }
+                    pot.clearBetsIfAllCalled();
+                    pot.refundUncoveredBet();
 
                     // dealing river and bet
-                    dealTurn();
-                    logger.warn("river round starts.");
-                    // turn
+                    alertAll(status("dealing river"));
+                    dealRiver();
+                    Thread.sleep(3000);
                     initBettingRound("river");
-                    while (!activePlayer.equals(raiser)) {
-                        logger.warn("raiser is {}/{}, activePlayer is {}/{}", seatOf(raiser.getName()), raiser.getName(), seatOf(activePlayer.getName()), activePlayer.getName()  );
+                    while (!activePlayer.equals(raiser) && betRoundNeeded()) {
+                        logger.warn("river: raiser is {}/{}, activePlayer is {}/{}", seatOf(raiser.getName()), raiser.getName(), seatOf(activePlayer.getName()), activePlayer.getName()  );
                         getActionFromPlayer();
                         activePlayer = nextPlayer();
+                        logger.info("river: ap is now {}/seat-{}",activePlayer.getName(), seatOf(activePlayer.getName()));
+                        if (allPlayerChecked()){
+                            logger.info("river: all players checked, going to showdown");
+                            alertAll(status("going into showdown"));
+                            alertAll(showdown());
+                            rankHands();
+                            alertAll(chipshare());
+//                            sendShowdownHands();
+                            break;
+                        }
+                    }
+                    // showdown because someone is allin // TODO: same as river while loop
+                    if (!betRoundNeeded()) {
+                        logger.info("someone is allin ... going to showdown");
+                        alertAll(status("going into showdown"));
+                        alertAll(showdown());
+                        rankHands();
+                        alertAll(chipshare());
                     }
                 }
             }
         } catch ( Exception e){
                 e.printStackTrace();
         }
+    }
+
+
+//    private void showDown() { // TODO
+//        logger.warn("------ SHOWDOWN");
+//// collect all community cards
+//        String communityCardsString = "";
+//        for (Card card: communityCards){
+//            communityCardsString += card.toString();
+//        }
+//        logger.warn("communityCardsString: {}", communityCardsString);
+//
+//        // append player hole cards and rank hand
+//        for (Player p: seats.values()){
+//            if (p.inHand()){
+//                String playerCardsString = communityCardsString + p.getHoleCards();
+//                Hand playerHand = Dealer.rankHand(playerCardsString);
+//                logger.warn("player:{} has:{} (rank:{}) cards:{}", p.getName(), playerHand.getHandName(),
+//                        playerHand.getHandValue(), playerCardsString);
+//                pot.bets.getzzzzzzzzzzz
+//                b.setHandValue(playerHand.getHandValue());
+//
+//            }
+////            for (Bet b: pot.bets){ //// players maybe inhand but pot cleared !!!
+//        }
+
+//        // append player hole cards and rank hand
+//        for (Bet b: pot.bets){
+////            for (Bet b: pot.bets){ //// players maybe inhand but pot cleared !!!
+//            String playerCardsString = communityCardsString + b.getPlayer().getHoleCards();
+//            Hand playerHand = Dealer.rankHand(playerCardsString);
+//            logger.warn("player:{} has:{} (rank:{}) cards:{}", b.getPlayer().getName(), playerHand.getHandName(),
+//                    playerHand.getHandValue(), playerCardsString);
+//            b.setHandValue(playerHand.getHandValue());
+//        }
+
+
+
+
+//    }
+
+    private boolean allOtherFolded(){
+        return playersInHand() == 1;
     }
 
     private boolean isBigBlind(Player player) {
@@ -593,7 +800,12 @@ private void preparePlayersForNextHand(){
         // force post sb
         if (activePlayer.equals(seats.get(sbPosition)) && pot.getAllBets() == 0){
             //pot += activePlayer.postSmallBlind(sb);
-            pot.addBet(new Bet(activePlayer.postSmallBlind(sb), activePlayer));
+
+            int posted_sb = activePlayer.postSmallBlind(sb);
+            logger.warn("posted_sb value = {}", posted_sb);
+
+            pot.addBet(new Bet(posted_sb, activePlayer));
+//            pot.addBet(new Bet(activePlayer.postSmallBlind(sb), activePlayer));
             alertAll(sendPlayerMove("sb", sb));
             raiser = activePlayer;
         // force post bb
