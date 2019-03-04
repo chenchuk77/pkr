@@ -34,7 +34,7 @@ connection.onmessage = function (e) {
         console.log('buttons update received.');
         drawButtons(buttons);
     }
-    if (e.data.includes('startingStack')) {
+    if (e.data.includes('chips')) { // TODO !!! split to 2 messages (playermove / table)
         seats = JSON.parse(e.data);
         console.log('seats update received.');
         updateTable();
