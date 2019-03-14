@@ -41,6 +41,14 @@ public class Connection {
         this.webSocket = webSocket;
     }
 
+    @Override
+    public String toString() {
 
 
+        return "conn{" +
+                "u=" + ((user != null) ? user.getName() : "null") +
+                ", p=" + ((player != null) ? player.getName() : "null") +
+                ", ws=" + webSocket +
+                '}';
+    }
 }

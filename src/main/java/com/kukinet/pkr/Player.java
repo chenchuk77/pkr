@@ -105,6 +105,8 @@ public class Player {
 //        this.pocketCards = pocketCards;
 //    }
 
+    public Card getHoleCard1() {return holeCard1;}
+    public Card getHoleCard2() {return holeCard2;}
     public String getName() {return name;}
     public Table getTable() {return table;}
     public void setHoleCard1(Card holeCard1) { this.holeCard1 = holeCard1; }
@@ -221,16 +223,28 @@ public class Player {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Player player = (Player) o;
-        return chips == player.chips &&
-                commited == player.commited &&
-                inHand == player.inHand &&
-                Objects.equals(name, player.name);
+        return Objects.equals(name, player.name);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, chips, commited, inHand);
+        return Objects.hash(name);
     }
+//    @Override
+//    public boolean equals(Object o) {
+//        if (this == o) return true;
+//        if (o == null || getClass() != o.getClass()) return false;
+//        Player player = (Player) o;
+//        return chips == player.chips &&
+//                commited == player.commited &&
+//                inHand == player.inHand &&
+//                Objects.equals(name, player.name);
+//    }
+//
+//    @Override
+//    public int hashCode() {
+//        return Objects.hash(name, chips, commited, inHand);
+//    }
 
     public void sitout() {
         this.inHand = false;

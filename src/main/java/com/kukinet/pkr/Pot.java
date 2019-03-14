@@ -164,7 +164,8 @@ public class Pot {
 
     }
 
-    // splitting all bets until it gets empty
+    // splitting all bets until it gets empty and returns a map of players
+    // and the amount they won
     public Map<Player,Integer> splitPot() {
 
         setWinners();

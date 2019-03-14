@@ -9,7 +9,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
 
-public class ConsoleClient extends WebSocketClient {
+public class ConsoleClient extends WebSocketClient implements PlayerStrategy {
 
     private Map<Integer, PlayerDto> table;
     private Map<String, Integer> buttons;
@@ -143,9 +143,9 @@ public class ConsoleClient extends WebSocketClient {
         // buttons update JSON
         if (message.contains("sbPosition")){
             JsonObject buttonsJSON = new Gson().fromJson(message, JsonObject.class);
-            bets.put("sbPosition", buttonsJSON.get("sbPosition").getAsInt());
-            bets.put("bbPosition", buttonsJSON.get("bbPosition").getAsInt());
-            bets.put("dealerPosition", buttonsJSON.get("dealerPosition").getAsInt());
+            buttons.put("sbPosition", buttonsJSON.get("sbPosition").getAsInt());
+            buttons.put("bbPosition", buttonsJSON.get("bbPosition").getAsInt());
+            buttons.put("dealerPosition", buttonsJSON.get("dealerPosition").getAsInt());
             System.out.println( "ctx buttons updated." );
 //            JsonObject jsonMessage = new Gson().fromJson(status, JsonObject.class);
 //            buttons = Utils.parseButtonsJSON(jsonMessage);
@@ -268,31 +268,52 @@ public class ConsoleClient extends WebSocketClient {
         // if the error is fatal then onClose will be called additionally
     }
 
-    private void play(){
+    @Override
+    public void play(){
         JsonObject actionJSON = new JsonObject();
 
         // accepts comma-del string and convert to json
         Scanner scanner = new Scanner(System.in);
         System.out.println("your turn: [examples: bet,30 call,30 raise,60 check,0 fold,0]");
         String userAction = scanner.nextLine();
+        String action;
+        int amount;
 
-        if (userAction.equals("call") || userAction.equals("c")){
+        if (userAction.contains(",")) {
+            action = userAction.split(",")[0];
+            amount = Integer.valueOf(userAction.split(",")[1]);
+        } else {
+            action  = userAction;
+            amount = 0;
+        }
+
+        if (action.equals("call") || action.equals("c")){
             actionJSON.addProperty("action", "call");
-            actionJSON.addProperty("amount", 0);
-        } else if (userAction.equals("fold") || userAction.equals("f")){
+            actionJSON.addProperty("amount", amount);
+        } else if (action.equals("fold") || action.equals("f")){
             actionJSON.addProperty("action", "fold");
             actionJSON.addProperty("amount", 0);
-        } else if (userAction.equals("raise") || userAction.equals("r")){
+        } else if (action.equals("raise") || action.equals("r")){
             actionJSON.addProperty("action", "raise");
-            actionJSON.addProperty("amount", 0);
-        } else if (userAction.equals("check") || userAction.equals("k")){
+            actionJSON.addProperty("amount", amount);
+        } else if (action.equals("bet") || action.equals("b")){
+            actionJSON.addProperty("action", "bet");
+            actionJSON.addProperty("amount", amount);
+        } else if (action.equals("check") || action.equals("k")){
             actionJSON.addProperty("action", "check");
             actionJSON.addProperty("amount", 0);
+        } else if (action.equals("allin") || action.equals("a")){
+            actionJSON.addProperty("action", "allin");
+            actionJSON.addProperty("amount", 0);
         } else {
-            String action  = userAction.split(",")[0];
-            String amount = userAction.split(",")[1];
-            actionJSON.addProperty("action", action);
-            actionJSON.addProperty("amount", Integer.valueOf(amount));
+            System.out.println("unknown command, assuming fold.");
+            actionJSON.addProperty("action", "fold");
+            actionJSON.addProperty("amount", 0);
+
+//            String action  = userAction.split(",")[0];
+//            String amount = userAction.split(",")[1];
+//            actionJSON.addProperty("action", action);
+//            actionJSON.addProperty("amount", Integer.valueOf(amount));
         }
         send(actionJSON.toString());
     }
@@ -312,10 +333,10 @@ public class ConsoleClient extends WebSocketClient {
         // exit if no table yet
 //        if (table == null) return;
 //        if (table.get(0) == null) return;
-        //clearScreen();
+        clearScreen();
 //        System.out.println(ConsoleColors.CYAN_BOLD + "name" + "\t" + "efctv" + "/" + "start" + "\t" + "commit" + ConsoleColors.RESET);
 
-        System.out.println(ConsoleColors.CYAN_BOLD + "name" + "\t" + "chips" + "\t" + "commited" + ConsoleColors.RESET);
+        System.out.println(ConsoleColors.CYAN_BOLD + "name" + "\t" + "chips" + "\t" + "commited" + "pos" + "\t" + ConsoleColors.RESET);
 
         for (int i=0; i<4; i++){
             String color = ConsoleColors.RESET;
@@ -334,8 +355,10 @@ public class ConsoleClient extends WebSocketClient {
             if (!p.inHand()){color = ConsoleColors.RED;}
 
             // elvis checking if its me (if player in update is ctx player), to show cards
-            System.out.println(color + p.getName() + "\t" +
+            System.out.println(color +
+                    p.getName() + "\t" +
                     p.getChips() + "\t" +
+                 //   drawButtons(i) + "\t" +
                     (p.commited() == 0 ? " " : p.commited()) + "\t\t" +
                     drawButtons(i) + "\t\t" + ConsoleColors.RESET +
                     ((p.getName().equals(player.getName())) ?
@@ -356,7 +379,7 @@ public class ConsoleClient extends WebSocketClient {
 
         // print community cards
         if (!communityCards.isEmpty()){
-            System.out.println("----- community cards: " + communityCards.size());
+//            System.out.println("----- community cards: " + communityCards.size());
 
             String ccards = suitedCard(communityCards.get(0)) + "   " +
                             suitedCard(communityCards.get(1)) + "   " +
@@ -432,22 +455,27 @@ public class ConsoleClient extends WebSocketClient {
 
 
     private String drawButtons(int seatIndex) {
+//        System.out.println("---------- drawButtons called for seat: " + seatIndex);
+
         if (buttons == null) {
-            return "    ";
+//            System.out.println("---------- is null");
+            return "  ";
+
         }
         if (buttons.get("sbPosition") == null) {
-            return "    ";
+//            System.out.println("---------- buttons.get() returns null");
+            return "  ";
         }
         if (buttons.get("sbPosition") == seatIndex) {
-            return "[SB]";
+            return "SB";
         }
         if (buttons.get("bbPosition") == seatIndex) {
-            return "[BB]";
+            return "BB";
         }
         if (buttons.get("dealerPosition") == seatIndex) {
-            return "[DL]";
+            return "* ";
         }
-        return "----";
+        return "    ";
     }
 //
 //        //if (seatIndex ==
@@ -481,6 +509,7 @@ public class ConsoleClient extends WebSocketClient {
         USERNAME = args[0].split(",")[1];
 
         String password = args[0].split(",")[2];
+        String gameName = args[0].split(",")[3];
 
         ConsoleClient c = new ConsoleClient( new URI( "ws://localhost:4444" )); // more about drafts here: http://github.com/TooTallNate/Java-WebSocket/wiki/Drafts
         c.connect();
@@ -490,7 +519,17 @@ public class ConsoleClient extends WebSocketClient {
             e.printStackTrace();
         }
         c.send("login" + "," + USERNAME + "," + password);
-        c.send("register" + "," + USERNAME + ",testGame");
+
+        // register to testgame if 'testGame' keyword specified
+        if (gameName.equals("testGame")){
+            c.send("register" + "," + USERNAME + ",testGame");
+
+        }
+        if (gameName.equals("noop")){
+            c.send("statusrequest");
+
+        }
+
 
 //        if (args[0].split(",").length==4 ){
 //            String gamename = args[0].split(",")[3];

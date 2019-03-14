@@ -47,7 +47,7 @@ public class Game implements Runnable {
 //    }
 
 
-
+    // create a new player for a given user during registration.
     public void addPlayer(User user) {
         Player player = new Player(user.getName());
         players.add(player);
@@ -67,6 +67,14 @@ public class Game implements Runnable {
 
     @Override
     public void run() {
+        if (players.size() < 4){
+            try {
+                logger.info("cant start {}. only {} players... waiting 5 sec", name, players.size());
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
         logger.info("starting game: {}, with {} players.", name, players.size());
         Table table = new Table(players, connectionManager);
         // TODO: why player need to know his table, can be many

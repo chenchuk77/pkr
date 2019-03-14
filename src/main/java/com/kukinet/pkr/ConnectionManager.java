@@ -31,18 +31,8 @@ public class ConnectionManager extends WebSocketServer {
         this.start();
     }
 
-//    private void removeConnection(){
-//        Iterator<Map<WebSocket, Connection>> iter = connections.iterator();
-//        while (iter.hasNext()) {
-//            if (iter.next().get("x").equals("y"))
-//                iter.remove();
-//        }
-//
-//    }
-
     @Override
     public void onOpen(WebSocket ws, ClientHandshake handshake) {
-        connections.put(ws, new Connection(ws));
         logger.info("New connection from {}.", ws.getRemoteSocketAddress().getAddress().getHostAddress());
     }
 
@@ -55,6 +45,18 @@ public class ConnectionManager extends WebSocketServer {
 
     @Override
     public void onMessage(WebSocket ws, String message) {
+        if (message.contains("statusrequest")){
+//            logger.info("status request received from ws {}", ws);
+//            Connection c = connections.get(ws);
+//            logger.info("got conn {} for ws {} ", c, ws);
+            Player player = connections.get(ws).getPlayer();
+//            logger.info("got player {} from ws {} ", player, ws);
+            logger.info("status request received from {}", player.getName());
+            player.getTable().updateClient(player);
+        }
+
+
+
         if (message.contains("action")){
             Gson gson = new Gson();
             ActionCommand cmd = gson.fromJson(message, ActionCommand.class);
@@ -74,12 +76,25 @@ public class ConnectionManager extends WebSocketServer {
             String password = message.split(",")[2];
             User user = loginService.login(username, password);
             if (user != null){
-                connections.put(ws, new Connection(user, ws));
-                lobbyManager.loginUser(user);
+                // allow user to login again from different device.
+                if (connectionExistsFor(user)){
+                    // save the current connection, and update it with the new websocket
+                    Connection oldConnection = getConnection(user);
+                    oldConnection.setWebSocket(ws);
+                    // remove old entry and add back the new
+                    removeConnection(user);
+                    connections.put(ws, oldConnection);
+                    logger.info("user: {} logged in from a different device, updating connection entry.", oldConnection.getPlayer().getName());
+                // this is a new connection ( not updating existing one )
+                } else {
+                    connections.put(ws, new Connection(user, ws));
+                    lobbyManager.loginUser(user);
+                }
             } else {
                 logger.warn("no such user: {}.", username);
             }
         }
+
 //        if (status.startsWith("logout")){
 //            logger.info("logout command accepted.");
 //            String cmd = status.split(",")[0];
@@ -175,12 +190,23 @@ public class ConnectionManager extends WebSocketServer {
         }
     }
 
-    public WebSocket getPlayerConnetion(Player player){
+    public WebSocket getPlayerWebsocket(Player player){
+        logger.warn("looking ws for player {}", player.getName());
+
         for (Map.Entry<WebSocket, Connection> e : connections.entrySet()) {
+            //logger.warn("looping conn entries: {} - {}", e.getKey(), e.getValue());
+
             Connection c = e.getValue();
+
             Player p = c.getPlayer();
+            //logger.warn("checking if {} == {} ? ", p.getName(), player.getName());
+
             if (p.equals(player)) {
+                logger.warn("player {} found", player.getName());
+
                 WebSocket key = e.getKey();
+                logger.warn("ws={} ", key);
+                //logger.warn("ws={} ", c.getWebSocket());
                 return key;
             }
         }
@@ -189,6 +215,90 @@ public class ConnectionManager extends WebSocketServer {
     public String getUserName(WebSocket webSocket){
         return connections.get(webSocket).getUser().getName();
     }
+
+
+    // check if entry exists
+    private boolean connectionExistsFor(User user){
+        Collection<Connection> conns = connections.values();
+        for (Connection c: conns){
+            if (c.getUser() != null && c.getUser().equals(user)) return true;
+        }
+        return false;
+    }
+
+    // return a player from a user, to build a new entry upon reconnect
+    private Player getPlayer(User user){
+        Player p = null;
+        Collection<Connection> conns = connections.values();
+        for (Connection c: conns){
+            if (c.getUser() != null && c.getUser().equals(user)) {
+                return c.getPlayer();
+            }
+        }
+        return null;
+    }
+
+    // extract a connection entry for a given user
+    private Connection getConnection(User user){
+        for (Map.Entry<WebSocket, Connection> e : connections.entrySet()) {
+            Connection c = e.getValue();
+            if (c.getUser() != null && c.getUser().equals(user)) {
+                return c;
+            }
+        }
+        logger.warn("no connection for user {}", user.getName());
+        return null;
+    }
+
+
+//    private void removeWeb(User user){
+//        WebSocket keyToRemove = null;
+//        for (Map.Entry<WebSocket, Connection> e : connections.entrySet()) {
+//            //logger.warn("looping conn entries: {} - {}", e.getKey(), e.getValue());
+
+            // remove existing entry
+    private void removeConnection(User user){
+        WebSocket keyToRemove = null;
+        for (Map.Entry<WebSocket, Connection> e : connections.entrySet()) {
+            //logger.warn("looping conn entries: {} - {}", e.getKey(), e.getValue());
+
+            Connection c = e.getValue();
+            if (c.getUser() != null && c.getUser().equals(user)) {
+                logger.info("existing connection found for {}, tagging for removal.", user.getName());
+                keyToRemove = e.getKey();
+            }
+        }
+        connections.remove(keyToRemove);
+
+
+
+//            Connection connToRemove = null;
+//        // look for connection entry for this user
+//        Collection<Connection> conns = connections.values();
+//        for (Connection c: conns){
+//            if (c.getUser() != null && c.getUser().equals(user)) {
+//                logger.info("existing connection found for {}, tagging for removal.", user.getName());
+//                connToRemove = c;
+//            }
+//        }
+//        // if found: delete entry by value
+//        if (connToRemove != null){
+//            connections.values().remove(connToRemove);
+//        }
+    }
+
+    // debug
+    public String showConnections(){
+        String rv = "";
+        for (Map.Entry<WebSocket, Connection> e : connections.entrySet()){
+            Connection c = e.getValue();
+            WebSocket ws = e.getKey();
+            rv += "ws-" + ws + "::{";
+            rv += c.toString() + "}\n";
+        }
+        return rv;
+    }
+
 }
 
 

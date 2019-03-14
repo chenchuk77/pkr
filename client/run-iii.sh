@@ -8,6 +8,6 @@ CP="/usr/lib/jvm/java-8-openjdk-amd64/jre/lib/charsets.jar:/usr/lib/jvm/java-8-o
 
 
 cd /home/lumos/dev/SpringWebSocket/target/classes
-java -cp ${CP} com.kukinet.client.ConsoleClient login,iii,1234
+java -cp ${CP} com.kukinet.client.ConsoleClient login,iii,1234,testGame
 #java -cp ${CP} com.kukinet.pkr.ConsoleClient login,iii,1234,testGame
 

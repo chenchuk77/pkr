@@ -64,6 +64,7 @@ var login = function(){
     user = username;
     player.name = username;
     $('#loggedOut').show();
+    connection.send('statusrequest');
 };
 
 var logout = function(){
