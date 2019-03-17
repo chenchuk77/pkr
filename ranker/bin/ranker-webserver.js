@@ -19,7 +19,8 @@ const port = 3000;
 // this library can evaluate 7 cards poker hand. example usage:
 // var rank = PokerEvaluator.evalHand(["As", "Ks", "Qs", "Js", "Ts", "3c", "5h"]);
 // var PokerEvaluator = require("/home/lumos/dev/poker-evaluator/lib/PokerEvaluator.js");
-var PokerEvaluator = require("/home/lumos/dev/SpringWebSocket/ranker/lib/PokerEvaluator.js");
+//var PokerEvaluator = require("/home/lumos/dev/SpringWebSocket/ranker/lib/PokerEvaluator.js");
+var PokerEvaluator = require("/home/chenchuk/dev/pkr/ranker/lib/PokerEvaluator.js");
 
 // eval hand from array of cards
 function rankHand(cards){
