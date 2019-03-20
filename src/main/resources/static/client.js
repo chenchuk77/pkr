@@ -128,18 +128,49 @@ var register = function(){
 
 
 var bet = function(){
-    connection.send('bet: 300');
+    // connection.send('bet: 300');
+    actionCommand = {"action": "bet", "amount": 500};
+    connection.send(actionCommand);
+
+
 };
 var raise = function(){
-    connection.send('raise: 700');
+    // connection.send('raise: 700');
+    actionCommand = {"action": "raise", "amount": 700};
+    connection.send(actionCommand);
+
 };
 var fold = function(){
-    connection.send('fold');
+    actionCommand = {"action": "fold", "amount": 0};
+    // connection.send('fold');
+    connection.send(JSON.stringify(actionCommand));
+    // actionJSON.addProperty("action", "fold");
+    // actionJSON.addProperty("amount", 0);
+
+
 };
 var call = function(){
-    connection.send('call: 300');
+    // connection.send('call: 300');
+    actionCommand = {"action": "call", "amount": 0};
+    // connection.send('fold');
+    connection.send(actionCommand);
+
 };
 
+// use this to send commands (will be replaced by action buttons when implemented)
+var sendAction = function (cmd, amount){
+    // if (str.contains(',')) {
+    //cmd = str.split(',')[0];
+   // amount = parseInt(str.split(',')[1]);
+    actionCommand = {"action": cmd, "amount": amount};
+    console.log("sending command: " + actionCommand);
+    connection.send(JSON.stringify(actionCommand));
+
+    // } else {
+    //     console.log("unsupported... use full commands. ie: call,50 or fold,0 ")
+    // }
+
+};
 
 //////////////// PIXI APPLICATION ///////////////////
 

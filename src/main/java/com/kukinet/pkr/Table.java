@@ -668,7 +668,7 @@ public class Table {
         logger.info("alerting all: {}", message);
         //for (Player activePlayer : players) {
         for (Player player: seats.values()){
-            logger.warn("player-{}, ws-{}", player.getName(), connectionManager.getPlayerWebsocket(player));
+            //logger.warn("player-{}, ws-{}", player.getName(), connectionManager.getPlayerWebsocket(player));
             WebSocket ws = connectionManager.getPlayerWebsocket(player);
             ws.send(message);
         }

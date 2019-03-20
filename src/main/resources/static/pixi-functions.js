@@ -208,8 +208,8 @@ function drawCards(code1, code2, seat_id){
     card1.x=location.x;
     card1.y=location.y;
     card2 = getCardSprite(code2);
-    card2.x=location.x+20;
-    card2.y=location.y+20;
+    card2.x=location.x+40;
+    card2.y=location.y+10;
     app.stage.addChild(card1);
     app.stage.addChild(card2);
 }
