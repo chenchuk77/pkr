@@ -13,6 +13,12 @@ function getCardSprite(cardCode) {
     return null;
 }
 
+function getBetButtonSprite(){
+    betButtonSprite = new Sprite(resources['images/buttons_120x40/button_bet.png'].texture);
+    // raiseButtonSprite.scale.x=0.1;
+    // raiseButtonSprite.scale.y=0.1;
+    return betButtonSprite;
+}
 function getRaiseButtonSprite(){
     raiseButtonSprite = new Sprite(resources['images/buttons_120x40/button_raise.png'].texture);
     // raiseButtonSprite.scale.x=0.1;
@@ -25,6 +31,18 @@ function getCallButtonSprite(){
     // callButtonSprite.scale.x=0.1;
     // callButtonSprite.scale.y=0.1;
     return callButtonSprite;
+}
+function getFoldButtonSprite(){
+    foldButtonSprite = new Sprite(resources['images/buttons_120x40/button_fold.png'].texture);
+    // callButtonSprite.scale.x=0.1;
+    // callButtonSprite.scale.y=0.1;
+    return foldButtonSprite;
+}
+function getCheckButtonSprite(){
+    checkButtonSprite = new Sprite(resources['images/buttons_120x40/button_check.png'].texture);
+    // callButtonSprite.scale.x=0.1;
+    // callButtonSprite.scale.y=0.1;
+    return checkButtonSprite;
 }
 
 function getBbSprite() {
@@ -129,14 +147,28 @@ function drawRiver(code){
 
 function drawActionButtons(){
     console.log('drawActionButtons() called.');
-    callButton = getCallButtonSprite();
-    callButton.x= 100;
-    callButton.y= 450;
+    foldButton = getFoldButtonSprite();
+    foldButton.x= 100;
+    foldButton.y= 450;
 
+    callButton = getCallButtonSprite();
+    callButton.x= 250;
+    callButton.y= 450;
+    checkButton = getCheckButtonSprite();
+    checkButton .x= 250;
+    checkButton .y= 500;
+
+    betButton = getBetButtonSprite();
+    betButton.x= 400;
+    betButton.y= 450;
     raiseButton = getRaiseButtonSprite();
-    raiseButton.x= 250;
-    raiseButton.y= 450;
+    raiseButton.x= 400;
+    raiseButton.y= 500;
+
+    app.stage.addChild(foldButton);
     app.stage.addChild(callButton);
+    app.stage.addChild(checkButton);
+    app.stage.addChild(betButton);
     app.stage.addChild(raiseButton);
 
 

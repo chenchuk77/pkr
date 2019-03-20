@@ -152,7 +152,10 @@ imageFiles.push('images/other/poker_table.png');
 imageFiles.push('images/other/sbButton.png');
 imageFiles.push('images/other/bbButton.png');
 imageFiles.push('images/other/dealerButton.png');
+imageFiles.push('images/buttons_120x40/button_bet.png');
 imageFiles.push('images/buttons_120x40/button_call.png');
+imageFiles.push('images/buttons_120x40/button_check.png');
+imageFiles.push('images/buttons_120x40/button_fold.png');
 imageFiles.push('images/buttons_120x40/button_raise.png');
 
 // TODO: remove, this for testing only
