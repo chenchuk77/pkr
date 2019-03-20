@@ -3,12 +3,28 @@ function getCardSprite(cardCode) {
     for (var i = 0; i < cards_array.length; i++) {
         if (cards_array[i].code == cardCode) {
             cardSprite = new Sprite(resources[cards_array[i].file].texture);
-            cardSprite.scale.x=0.1;
-            cardSprite.scale.y=0.1;
+            // cardSprite.scale.x=0.1;
+            // cardSprite.scale.y=0.1;
+            cardSprite.scale.x=0.25;
+            cardSprite.scale.y=0.25;
             return cardSprite;
         }
     }
     return null;
+}
+
+function getRaiseButtonSprite(){
+    raiseButtonSprite = new Sprite(resources['images/buttons_120x40/button_raise.png'].texture);
+    // raiseButtonSprite.scale.x=0.1;
+    // raiseButtonSprite.scale.y=0.1;
+    return raiseButtonSprite;
+}
+
+function getCallButtonSprite(){
+    callButtonSprite = new Sprite(resources['images/buttons_120x40/button_call.png'].texture);
+    // callButtonSprite.scale.x=0.1;
+    // callButtonSprite.scale.y=0.1;
+    return callButtonSprite;
 }
 
 function getBbSprite() {
@@ -95,6 +111,37 @@ function drawFlop(code1, code2, code3){
     app.stage.addChild(card2);
     app.stage.addChild(card3);
 }
+function drawTurn(code){
+    turnCard = getCardSprite(code);
+    turnCard.x=380;
+    turnCard.y=200;
+    app.stage.addChild(turnCard);
+
+}
+
+function drawRiver(code){
+    riverCard = getCardSprite(code);
+    riverCard.x=450;
+    riverCard.y=200;
+    app.stage.addChild(riverCard);
+}
+
+
+function drawActionButtons(){
+    console.log('drawActionButtons() called.')
+    callButton = getCallButtonSprite();
+    callButton.x= 100;
+    callButton.y= 600;
+
+    raiseButton = getRaiseButtonSprite();
+    raiseButton.x= 250;
+    raiseButton.y= 600;
+    app.stage.addChild(callButton);
+    app.stage.addChild(raiseButton);
+
+
+}
+
 
 function drawButtons(buttons){
     console.log('drawButtons() called.')
@@ -117,6 +164,7 @@ function drawButtons(buttons){
     app.stage.addChild(bb_sprite);
     app.stage.addChild(dealer_sprite);
 }
+
 
 function drawBets(amount, seat_id){
 

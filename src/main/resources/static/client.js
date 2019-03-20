@@ -9,6 +9,7 @@ $( document ).ready(function() {
 
 var seats;
 var pocketCards;
+var communityCards;
 var bets;
 var buttons;
 
@@ -45,6 +46,37 @@ connection.onmessage = function (e) {
         player.cards=[pocketCards.card1, pocketCards.card2];
         drawPocketCards(seats);
     }
+    if (e.data.includes('community')) {
+        communityCards = JSON.parse(e.data);
+        console.log('communityCards update received.');
+        drawFlop(communityCards.flop1, communityCards.flop2, communityCards.flop3);
+        console.log('flop cards: ' + communityCards.flop1 + ' ' + communityCards.flop2 + ' ' +communityCards.flop1 + '.');
+        if (communityCards.hasOwnProperty('turn')){
+            console.log('turn card: ' + communityCards.turn);
+            drawTurn(communityCards.turn);
+        }
+        if (communityCards.hasOwnProperty('river')){
+            console.log('river card: ' + communityCards.river);
+            drawRiver(communityCards.river);
+        }
+    }
+
+    // server notify it waits for a player command
+    if (e.data.includes('waitaction')) {
+        var commandJSON = JSON.parse(e.data);
+        console.log('waitaction command received.');
+        // server waits for us
+        if (player.name === commandJSON.player){
+            console.log("server is waiting for our command.");
+            drawActionButtons();
+        } else {
+            console.log("its " + commandJSON.player + "'s turn.");
+        }
+    }
+
+
+    // received: {"command":"waitaction","player":"fff"}
+
 };
 
 // player is a seated user

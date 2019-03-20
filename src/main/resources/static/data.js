@@ -18,6 +18,14 @@ let buttonsPosition =[
     {x: 380, y:200}
 ];
 
+let actionButtonsPosition =[
+    {x: 100, y:600},
+    {x: 350, y:600},
+    {x: 500, y:600},
+    {x: 650, y:600}
+];
+
+
 let cards_array = [
     { code: 'Tc', file: 'images/cards/Tc.svg'},
     { code: 'Td', file: 'images/cards/Td.svg'},
@@ -71,7 +79,7 @@ let cards_array = [
     { code: 'Qd', file: 'images/cards/Qd.svg'},
     { code: 'Qh', file: 'images/cards/Qh.svg'},
     { code: 'Qs', file: 'images/cards/Qs.svg'},
-    { code: '00', file: 'images/other/back.svg'}
+    { code: '00', file: 'images/cards/back.svg'}
 ];
 
 //
@@ -144,6 +152,8 @@ imageFiles.push('images/other/poker_table.png');
 imageFiles.push('images/other/sbButton.png');
 imageFiles.push('images/other/bbButton.png');
 imageFiles.push('images/other/dealerButton.png');
+imageFiles.push('images/buttons_120x40/button_call.png');
+imageFiles.push('images/buttons_120x40/button_raise.png');
 
 // TODO: remove, this for testing only
 //var players=['ddd','eee','fff','iii-starter'];

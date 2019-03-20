@@ -49,10 +49,18 @@ public class ConnectionManager extends WebSocketServer {
 //            logger.info("status request received from ws {}", ws);
 //            Connection c = connections.get(ws);
 //            logger.info("got conn {} for ws {} ", c, ws);
+
+
             Player player = connections.get(ws).getPlayer();
+            if (player != null) {
+                logger.info("status request received from {}", player.getName());
+                player.getTable().updateClient(player);
+            } else {
+                logger.warn("status request received from unknown client");
+
+            }
+//
 //            logger.info("got player {} from ws {} ", player, ws);
-            logger.info("status request received from {}", player.getName());
-            player.getTable().updateClient(player);
         }
 
 
