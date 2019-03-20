@@ -8,6 +8,9 @@ import org.java_websocket.handshake.ServerHandshake;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class ConsoleClient extends WebSocketClient implements PlayerStrategy {
 
@@ -33,6 +36,8 @@ public class ConsoleClient extends WebSocketClient implements PlayerStrategy {
 //    public ConsoleClient( URI serverUri, Map<String, String> httpHeaders ) {
 //        super(serverUri, httpHeaders);
 //    }
+    private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
+
     public ConsoleClient(URI serverURI) {
         super( serverURI );
         initHand();
@@ -115,6 +120,9 @@ public class ConsoleClient extends WebSocketClient implements PlayerStrategy {
         System.out.println( "client connected." );
         // if you plan to refuse connection based on ip or httpfields overload: onWebsocketHandshakeReceivedAsClient
 
+        executorService.scheduleAtFixedRate(()->{
+            send("ping");
+        }, 5, 5, TimeUnit.SECONDS);
     }
 
     @Override
@@ -512,7 +520,9 @@ public class ConsoleClient extends WebSocketClient implements PlayerStrategy {
         String gameName = args[0].split(",")[3];
 
         ConsoleClient c = new ConsoleClient( new URI( "ws://localhost:4444" )); // more about drafts here: http://github.com/TooTallNate/Java-WebSocket/wiki/Drafts
+        c.setConnectionLostTimeout(0);
         c.connect();
+
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
@@ -527,9 +537,7 @@ public class ConsoleClient extends WebSocketClient implements PlayerStrategy {
         }
         if (gameName.equals("noop")){
             c.send("statusrequest");
-
         }
-
 
 //        if (args[0].split(",").length==4 ){
 //            String gamename = args[0].split(",")[3];

@@ -28,6 +28,7 @@ public class ConnectionManager extends WebSocketServer {
     public ConnectionManager() {
         super(new InetSocketAddress(TCP_PORT));
         connections = new HashMap<>();
+        this.setConnectionLostTimeout(0);
         this.start();
     }
 
@@ -45,6 +46,7 @@ public class ConnectionManager extends WebSocketServer {
 
     @Override
     public void onMessage(WebSocket ws, String message) {
+
         if (message.contains("statusrequest")){
 //            logger.info("status request received from ws {}", ws);
 //            Connection c = connections.get(ws);
@@ -63,8 +65,6 @@ public class ConnectionManager extends WebSocketServer {
 //            logger.info("got player {} from ws {} ", player, ws);
         }
 
-
-
         if (message.contains("action")){
             Gson gson = new Gson();
             ActionCommand cmd = gson.fromJson(message, ActionCommand.class);
@@ -77,6 +77,7 @@ public class ConnectionManager extends WebSocketServer {
                 logger.warn("{} action received from {}, but player is not ready.", cmd.getAction(), player.getName());
             }
         }
+
         if (message.startsWith("login")){
             logger.info("login command accepted.");
             String cmd = message.split(",")[0];
@@ -199,7 +200,7 @@ public class ConnectionManager extends WebSocketServer {
     }
 
     public WebSocket getPlayerWebsocket(Player player){
-        //logger.warn("looking ws for player {}", player.getName());
+        logger.warn("looking ws for player {}", player.getName());
 
         for (Map.Entry<WebSocket, Connection> e : connections.entrySet()) {
             //logger.warn("looping conn entries: {} - {}", e.getKey(), e.getValue());
@@ -210,10 +211,10 @@ public class ConnectionManager extends WebSocketServer {
             //logger.warn("checking if {} == {} ? ", p.getName(), player.getName());
 
             if (p.equals(player)) {
-                //logger.warn("player {} found", player.getName());
+                logger.warn("player {} found", player.getName());
 
                 WebSocket key = e.getKey();
-                //logger.warn("ws={} ", key);
+                logger.warn("ws={} ", key);
                 //logger.warn("ws={} ", c.getWebSocket());
                 return key;
             }

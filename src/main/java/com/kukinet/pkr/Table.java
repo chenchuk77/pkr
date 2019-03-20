@@ -17,7 +17,7 @@ import java.util.Map;
 public class Table {
     private Logger logger = LoggerFactory.getLogger(Table.class);
     private static final int ACTION_WAIT_TIME_SEC = 240;
-//    private static final int ACTION_WAIT_TIME_SEC = 30;
+    //private static final int ACTION_WAIT_TIME_SEC = 30;
     private static final int MIN_PLAYERS = 2;
     private static final int MAX_PLAYERS = 4;
 
