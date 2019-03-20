@@ -67,7 +67,7 @@ public class Game implements Runnable {
 
     @Override
     public void run() {
-        if (players.size() < 4){
+        while (players.size() < 4){
             try {
                 logger.info("cant start {}. only {} players... waiting 20 sec", name, players.size());
                 Thread.sleep(5000);

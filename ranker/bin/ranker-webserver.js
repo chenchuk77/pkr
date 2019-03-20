@@ -18,8 +18,8 @@ const port = 3000;
 
 // this library can evaluate 7 cards poker hand. example usage:
 // var rank = PokerEvaluator.evalHand(["As", "Ks", "Qs", "Js", "Ts", "3c", "5h"]);
-// var PokerEvaluator = require("/home/lumos/dev/poker-evaluator/lib/PokerEvaluator.js");
-var PokerEvaluator = require("/home/lumos/dev/SpringWebSocket/ranker/lib/PokerEvaluator.js");
+
+var PokerEvaluator = require(process.env.HOME + '/dev/pkr/ranker/lib/PokerEvaluator.js');
 
 // eval hand from array of cards
 function rankHand(cards){
@@ -58,6 +58,6 @@ server.listen(port, (err) => {
     return console.log('something bad happened', err)
   }
 
-  console.log(`server is listening on ${port}`)
+  console.log(`ranking server is listening on ${port}`)
 })
 
