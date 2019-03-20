@@ -1,3 +1,24 @@
-color cards
 
-http://vectorpaint.yaks.co.nz/
+console clients:
+- ddd, eee, fff, iii are 4 players
+- auto login
+- auto register to 'testGame'
+- start.sh can be used to create OS shortcut (ubuntu, see below)
+
+used resources :
+- color cards from http://vectorpaint.yaks.co.nz/
+
+
+OS shortcut to start 4 players outside Intellij
+- create a launcher file with the below content at /home/lumos/.local/share/applications/clients.desktop
+- edit the correct path (dont use env vars !, only absolute paths)
+
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=javaPokerClientsStarter
+Icon=/home/lumos/dev/pkr/client/a.png
+Exec=/home/lumos/dev/pkr/client/start.sh
+Comment=Java console poker clients
+Categories=Development;IDE;
+Terminal=true
