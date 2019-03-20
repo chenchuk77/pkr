@@ -69,18 +69,8 @@ public class Game implements Runnable {
     public void run() {
         while (players.size() < 4){
             try {
-                logger.info("cant start {}. only {} players... waiting 20 sec", name, players.size());
-                Thread.sleep(5000);
-                logger.info("cant start {}. only {} players... waiting 15 sec", name, players.size());
-                Thread.sleep(5000);
-                logger.info("cant start {}. only {} players... waiting 10 sec", name, players.size());
-                Thread.sleep(5000);
                 logger.info("cant start {}. only {} players... waiting 5 sec", name, players.size());
                 Thread.sleep(5000);
-                logger.info("continue...");
-
-
-
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

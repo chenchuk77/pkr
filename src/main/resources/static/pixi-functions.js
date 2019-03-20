@@ -128,14 +128,14 @@ function drawRiver(code){
 
 
 function drawActionButtons(){
-    console.log('drawActionButtons() called.')
+    console.log('drawActionButtons() called.');
     callButton = getCallButtonSprite();
     callButton.x= 100;
-    callButton.y= 600;
+    callButton.y= 450;
 
     raiseButton = getRaiseButtonSprite();
     raiseButton.x= 250;
-    raiseButton.y= 600;
+    raiseButton.y= 450;
     app.stage.addChild(callButton);
     app.stage.addChild(raiseButton);
 
@@ -144,7 +144,7 @@ function drawActionButtons(){
 
 
 function drawButtons(buttons){
-    console.log('drawButtons() called.')
+    console.log('drawButtons() called.');
     sb_seat = buttons.sbPosition;
     sb_sprite = getSbSprite();
     sb_sprite.x = buttonsPosition[sb_seat].x;
