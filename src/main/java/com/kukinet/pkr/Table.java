@@ -34,6 +34,7 @@ public class Table {
 //    private int pot;
     private Pot pot;
     private boolean raisedPot;
+    private boolean isCheckAllowed;
 
     private int sbPosition;
     private int bbPosition;
@@ -72,10 +73,11 @@ public class Table {
         // seat the players from 0-9 (or 0-4 in testing)
         this.seats = new HashMap<>();
         for (int i=0; i<MAX_PLAYERS; i++){
-            seats.put(i, players.get(i));
+            Player player = players.get(i);
+            player.setSeatPosition(i);
+            seats.put(i, player);
         }
     }
-
 
     private int seatOf(String name){
         for (Map.Entry<Integer, Player> entry: seats.entrySet()){
@@ -86,21 +88,17 @@ public class Table {
         return 99;
     }
 
-
-
-
-
-
-
-
     // wait for player, and build a command from the activePlayer. execute and notify all
-    public void waitPlayerCommand(Player player){
+    public boolean waitPlayerCommand(Player player){
         JsonObject requestPlayerAction = new JsonObject();
         requestPlayerAction.addProperty("command", "waitaction");
         requestPlayerAction.addProperty("player", player.getName());
         alertAll(requestPlayerAction.toString());
         player.setWaitForAction(true);
         logger.info("waiting for player {} to act.", player.getName());
+
+        boolean isActionCompleted = true;
+
         // block until action command accepted
         for (int i=0; i<ACTION_WAIT_TIME_SEC; i++){
             // no command received from client
@@ -112,13 +110,23 @@ public class Table {
                 }
             } else {
                 // command received
+
+                isActionCompleted = true;
+
                 ActionCommand cmd = player.getActionCommand();
                 if (cmd.getAction().equals("fold")){
                     fold(player);
                 } else if (cmd.getAction().equals("check")){
-                    check(player);
-                    player.setChecking(true);
-                    raiser = player; // no a raiser but opens the round
+                    if (this.isCheckAllowed && (this.bettingRound != "preflop" || player.getSeatPosition() == this.bbPosition)){
+                        check(player);
+                        player.setChecking(true);
+                        raiser = player; // no a raiser but opens the round
+                    }
+                    else{
+                        isActionCompleted = false;
+                        logger.info("player {} check not allowed.", player.getName());
+                        alert(player, status("illegal move."));
+                    }
                 } else if (cmd.getAction().equals("call")){
                     //call(player, cmd.getAmount());
                     call(player);
@@ -135,9 +143,14 @@ public class Table {
                     logger.warn("unknown command received from {}, assuming fold.", player.getName());
                     fold(player);
                 }
-                player.setWaitForAction(false);
+
+                if (isActionCompleted){
+                    player.setWaitForAction(false);
+                }
+
                 player.setActionCommand(null);
-                return;
+
+                return isActionCompleted;
             }
         }
 
@@ -147,8 +160,9 @@ public class Table {
         player.setActionCommand(null);
         fold(player);
         player.sitout();
-    }
 
+        return isActionCompleted;
+    }
 
     // --------------- player action commands ----------------
     public void fold(Player player)   {
@@ -170,6 +184,7 @@ public class Table {
         int callValue = raiser.commited() - player.commited();
         call(player, callValue);
     }
+
     public void call(Player player, int requestedAmount){
         int amount = player.call(requestedAmount);
         logger.info("player {} call {}.", player.getName(), amount);
@@ -178,7 +193,11 @@ public class Table {
         alertAll(status(player.getName() + " call " + amount + "."));
         alertAll(sendPlayerMove("call", amount));
     }
+
     public void bet(Player player, int requestedAmount){
+
+        this.isCheckAllowed = false;
+
         int amount = player.bet(requestedAmount);
         logger.info("player {} bet {}.", player.getName(), amount);
         pot.addBet(new Bet(amount, player));
@@ -191,6 +210,9 @@ public class Table {
     }
 
     public void raise(Player player, int requestedAmount){
+
+        this.isCheckAllowed = false;
+
         int amount = player.raise(requestedAmount);
         logger.info("player {} raise {}.", player.getName(), amount);
         pot.addBet(new Bet(amount, player));
@@ -201,7 +223,6 @@ public class Table {
         alertAll(sendPlayerMove("raise", amount));
     }
 
-
     private int playersInGame(){
         int count = 0;
         for (Map.Entry<Integer, Player> entry: seats.entrySet()){
@@ -209,6 +230,7 @@ public class Table {
         }
         return count;
     }
+
     private int playersInHand(){
         int count = 0;
         for (Map.Entry<Integer, Player> entry: seats.entrySet()){
@@ -237,8 +259,6 @@ public class Table {
             }
         }
     }
-
-
 
     // pointing to next player to act
     private Player nextPlayer(){
@@ -272,6 +292,7 @@ public class Table {
         newLevel(0, 30, 60);
         //initHand();
     }
+
     void newLevel(int ante, int sb, int bb){
         this.ante = ante;
         this.sb = sb;
@@ -398,7 +419,9 @@ public class Table {
         if (dealerPosition== MAX_PLAYERS-1) dealerPosition = 0; else dealerPosition ++;
         // TODO: fix empty seats .... if (seats.get(activePlayer)){
     }
+
     private void dealTurn(){
+        deck.pop(); // remove one card from the deck before dealing turn
         Card turn = deck.pop();
         communityCards.add(turn);
         sendCommunityCardsUpdate();
@@ -411,7 +434,9 @@ public class Table {
 //        alertAll(communityCardsJSON.toString());
 
     }
+
     private void dealRiver(){
+        deck.pop(); // remove one card from the deck before dealing river
         Card river = deck.pop();
         communityCards.add(river);
         sendCommunityCardsUpdate();
@@ -424,10 +449,11 @@ public class Table {
 //        communityCardsJSON.addProperty("turn", communityCards.get(3).toString());
 //        communityCardsJSON.addProperty("river", river.toString());
 //        alertAll(communityCardsJSON.toString());
-
     }
 
     private void dealFlop(){
+        deck.pop(); // remove one card from the deck before dealing flop
+
         communityCards = new ArrayList<>();
         Card f1 = deck.pop();
         Card f2 = deck.pop();
@@ -466,15 +492,34 @@ public class Table {
 
     private void dealHands(){
         logger.info("dealing cards...");
-        for (Player player: seats.values()){
+        for (Player player: seats.values()){ // deal first card for each player
             if (player.inGame()){
                 Card c1 = deck.pop();
-                Card c2 = deck.pop();
                 player.setHoleCard1(c1);
+                connectionManager.getPlayerWebsocket(player).send(setFirstPocketCard(player));
+
+//                JsonObject pocketCards = new JsonObject();
+//                pocketCards.addProperty("type", "cards");
+//
+//                for (Map.Entry<Integer, Player> entry: seats.entrySet()){
+//                    if (entry.getValue().equals(player)){
+//                        pocketCards.addProperty("seat", entry.getKey());
+//                    }
+//                }
+//                pocketCards.addProperty("card1", c1.toString());
+//                pocketCards.addProperty("card2", c2.toString());
+//                connectionManager.getPlayerWebsocket(player).send(pocketCards.toString());
+            } else {
+                logger.debug("skipping {} (not inGame).", player.getName());
+                player.setHoleCard1(null);
+                player.setHoleCard2(null);
+            }
+        }
+        for (Player player: seats.values()){ // deal second card for each player
+            if (player.inGame()){
+                Card c2 = deck.pop();
                 player.setHoleCard2(c2);
-
-
-                connectionManager.getPlayerWebsocket(player).send(pocketCards(player));
+                connectionManager.getPlayerWebsocket(player).send(setWholePocketCards(player));
 
 //                JsonObject pocketCards = new JsonObject();
 //                pocketCards.addProperty("type", "cards");
@@ -529,6 +574,7 @@ public class Table {
         buttons.addProperty("dealerPosition", dealerPosition);
         return buttons.toString();
     }
+
     public String betAmounts() {
         JsonObject bets = new JsonObject();
         bets.addProperty("ante", ante);
@@ -536,6 +582,7 @@ public class Table {
         bets.addProperty("bb", bb);
         return bets.toString();
     }
+
     public String status(String statusMessage) {
         JsonObject messageJSON = new JsonObject();
         messageJSON.addProperty("type", "status");
@@ -543,7 +590,7 @@ public class Table {
         return messageJSON.toString();
     }
 
-    public String pocketCards(Player player) {
+    public String setWholePocketCards(Player player) {
         JsonObject pocketCardsJSON = new JsonObject();
         pocketCardsJSON.addProperty("type", "cards");
 
@@ -557,10 +604,18 @@ public class Table {
         return pocketCardsJSON.toString();
     }
 
+    public String setFirstPocketCard(Player player) {
+        JsonObject pocketCardsJSON = new JsonObject();
+        pocketCardsJSON.addProperty("type", "cards");
 
-
-//    }
-
+        for (Map.Entry<Integer, Player> entry: seats.entrySet()){
+            if (entry.getValue().equals(player)){
+                pocketCardsJSON.addProperty("seat", entry.getKey());
+            }
+        }
+        pocketCardsJSON.addProperty("card1", player.getHoleCard1().toString());
+        return pocketCardsJSON.toString();
+    }
 
     // creating a potshare JSON
     private String potShare() {
@@ -679,6 +734,7 @@ public class Table {
         try {
             initGame();
             endRound();
+            this.isCheckAllowed = true;
             // more than 1 player in game
             // (exit when there is a winner)
 //            while(playersInGame()>1) {
@@ -709,17 +765,24 @@ public class Table {
                 while (!activePlayer.equals(raiser) && playersInHand()>1) {
                     logger.info("in hand players: {}",playersInHand());
                     logger.info("preflop: raiser-{}/seat-{}, ap-{}/seat-{}, bb-{}/name-{}, raisedPot-{}", raiser.getName(), seatOf(raiser.getName()), activePlayer.getName(), seatOf(activePlayer.getName()), bbPosition, seats.get(bbPosition).getName(), raisedPot);
-                    getActionFromPlayer();
-                    activePlayer = nextPlayer();
-                    // bb option. if no raise
+
+                    boolean isActionCompleted = getActionFromPlayer();
+                    if (isActionCompleted) {
+                        activePlayer = nextPlayer();
+                    }
+                        // bb option. if no raise
                     if (isBigBlind(activePlayer) && !raisedPot && playersInHand() >= 2){
                         logger.info("preflop: (bb option, no raise yet): raiser-{}/seat-{}, ap-{}/seat-{}, bb-{}/name-{}, raisedPot-{}", raiser.getName(), seatOf(raiser.getName()), activePlayer.getName(), seatOf(activePlayer.getName()), bbPosition, seats.get(bbPosition).getName(), raisedPot);
-                        getActionFromPlayer();
-                        if (activePlayer.isChecking()) continue;
-                        activePlayer = nextPlayer();
-                        raisedPot = true;
+                        isActionCompleted = getActionFromPlayer();
+                        if (isActionCompleted){
+                            if (activePlayer.isChecking()) continue;
+                            activePlayer = nextPlayer();
+                            raisedPot = true;
+                        }
                     }
+
                 }
+
                 if (allOtherFolded()){
                     activePlayer.setChips(activePlayer.getChips() + pot.getAllBets());
                     logger.info("preflop: raiser-{}/seat-{} didnt get called", raiser.getName(), seatOf(raiser.getName()));
@@ -732,6 +795,7 @@ public class Table {
                 pot.refundUncoveredBet();
 
                 // dealing flop and bet
+                this.isCheckAllowed = true;
                 alertAll(status("dealing flop"));
                 dealFlop();
 //                Thread.sleep(1000);
@@ -739,12 +803,14 @@ public class Table {
                     initBettingRound("flop");
                     while (!activePlayer.equals(raiser)) {
                         logger.info("flop: raiser-{}/seat-{}, ap-{}/seat-{}, bb-{}/name-{}, raisedPot-{}", raiser.getName(), seatOf(raiser.getName()), activePlayer.getName(), seatOf(activePlayer.getName()), bbPosition, seats.get(bbPosition).getName(), raisedPot);
-                        getActionFromPlayer();
-                        activePlayer = nextPlayer();
-                        logger.info("flop: ap is now {}/seat-{}",activePlayer.getName(), seatOf(activePlayer.getName()));
-                        if (allPlayerChecked()){
-                            logger.info("flop: all players checked, exit round");
-                            break;
+                        boolean isActionCompleted = getActionFromPlayer();
+                        if (isActionCompleted){
+                            activePlayer = nextPlayer();
+                            logger.info("flop: ap is now {}/seat-{}",activePlayer.getName(), seatOf(activePlayer.getName()));
+                            if (allPlayerChecked()){
+                                logger.info("flop: all players checked, exit round");
+                                break;
+                            }
                         }
                     }
                 }
@@ -760,6 +826,7 @@ public class Table {
                 pot.refundUncoveredBet();
 
                 // dealing turn and bet
+                this.isCheckAllowed = true;
                 alertAll(status("dealing turn"));
                 dealTurn();
 //                Thread.sleep(1000);
@@ -767,12 +834,14 @@ public class Table {
                     initBettingRound("turn");
                     while (!activePlayer.equals(raiser)) {
                         logger.warn("turn: raiser is {}/{}, activePlayer is {}/{}", seatOf(raiser.getName()), raiser.getName(), seatOf(activePlayer.getName()), activePlayer.getName()  );
-                        getActionFromPlayer();
-                        activePlayer = nextPlayer();
-                        logger.info("turn: ap is now {}/seat-{}",activePlayer.getName(), seatOf(activePlayer.getName()));
-                        if (allPlayerChecked()){
-                            logger.info("turn: all players checked, exit round");
-                            break;
+                        boolean isActionCompleted = getActionFromPlayer();
+                        if (isActionCompleted){
+                            activePlayer = nextPlayer();
+                            logger.info("turn: ap is now {}/seat-{}",activePlayer.getName(), seatOf(activePlayer.getName()));
+                            if (allPlayerChecked()){
+                                logger.info("turn: all players checked, exit round");
+                                break;
+                            }
                         }
                     }
                 }
@@ -789,6 +858,7 @@ public class Table {
                 pot.refundUncoveredBet();
 
                 // dealing river and bet
+                this.isCheckAllowed = true;
                 alertAll(status("dealing river"));
                 dealRiver();
 //                Thread.sleep(1000);
@@ -796,17 +866,19 @@ public class Table {
                     initBettingRound("river");
                     while (!activePlayer.equals(raiser)) {
                         logger.warn("river: raiser is {}/{}, activePlayer is {}/{}", seatOf(raiser.getName()), raiser.getName(), seatOf(activePlayer.getName()), activePlayer.getName()  );
-                        getActionFromPlayer();
-                        activePlayer = nextPlayer();
-                        logger.info("river: ap is now {}/seat-{}",activePlayer.getName(), seatOf(activePlayer.getName()));
-                        if (allPlayerChecked()){
-                            logger.info("river: all players checked.");
+                        boolean isActionCompleted = getActionFromPlayer();
+                        if (isActionCompleted){
+                            activePlayer = nextPlayer();
+                            logger.info("river: ap is now {}/seat-{}",activePlayer.getName(), seatOf(activePlayer.getName()));
+                            if (allPlayerChecked()){
+                                logger.info("river: all players checked.");
 //                            alertAll(status("going into showdown"));
 //                            alertAll(showdown());
 //                            rankHands();
 //                            alertAll(potShare());
 //                           // sendShowdownHands();
-                            break;
+                                break;
+                            }
                         }
                     }
                 }
@@ -877,8 +949,11 @@ public class Table {
     }
 
     // get action (blocking) and broadcast the move
-    private void getActionFromPlayer(){
+    private boolean getActionFromPlayer(){
         // force post sb
+
+        boolean isCompleted = true;
+
         if (activePlayer.equals(seats.get(sbPosition)) && pot.getAllBets() == 0){
             //pot += activePlayer.postSmallBlind(sb);
 
@@ -898,8 +973,10 @@ public class Table {
             raisedPot = false;
             // block until response from client
         } else {
-            waitPlayerCommand(activePlayer);
+            isCompleted = waitPlayerCommand(activePlayer);
         }
+
+        return isCompleted;
     }
 
     // reply to a client request for full update (after reconnect)
@@ -908,6 +985,6 @@ public class Table {
         alert(player, seats());
         alert(player, betAmounts());
         alert(player, buttonsPos());
-        alert(player, pocketCards(player));
+        alert(player, setWholePocketCards(player));
     }
 }

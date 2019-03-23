@@ -120,9 +120,9 @@ public class ConsoleClient extends WebSocketClient implements PlayerStrategy {
         System.out.println( "client connected." );
         // if you plan to refuse connection based on ip or httpfields overload: onWebsocketHandshakeReceivedAsClient
 
-        executorService.scheduleAtFixedRate(()->{
-            send("ping");
-        }, 5, 5, TimeUnit.SECONDS);
+        //executorService.scheduleAtFixedRate(()->{
+        //    send("ping");
+        //}, 5, 5, TimeUnit.SECONDS);
     }
 
     @Override
