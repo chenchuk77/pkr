@@ -95,10 +95,17 @@ public class Table {
 
     // wait for player, and build a command from the activePlayer. execute and notify all
     public void waitPlayerCommand(Player player){
-        JsonObject requestPlayerAction = new JsonObject();
-        requestPlayerAction.addProperty("command", "waitaction");
-        requestPlayerAction.addProperty("player", player.getName());
-        alertAll(requestPlayerAction.toString());
+
+        CommandValidator cv = new CommandValidator(this, player, pot);
+
+
+//        JsonObject requestPlayerAction = new JsonObject();
+//        requestPlayerAction.addProperty("command", "waitaction");
+//        requestPlayerAction.addProperty("player", player.getName());
+//        alertAll(requestPlayerAction.toString());
+        alertAll(cv.getValidOptions());
+
+
         player.setWaitForAction(true);
         logger.info("waiting for player {} to act.", player.getName());
         // block until action command accepted
@@ -113,7 +120,13 @@ public class Table {
             } else {
                 // command received
                 ActionCommand cmd = player.getActionCommand();
-                if (cmd.getAction().equals("fold")){
+                // validating command
+                cmd = cv.validate(cmd);
+                if (cmd.getAction().equals("invalid")){
+                    logger.warn("invalid command received from {}, assuming fold.", player.getName());
+                    fold(player);
+
+                } else if (cmd.getAction().equals("fold")){
                     fold(player);
                 } else if (cmd.getAction().equals("check")){
                     check(player);
@@ -132,7 +145,7 @@ public class Table {
                     raise(player, player.getChips());
                     raiser = player;
                 } else {
-                    logger.warn("unknown command received from {}, assuming fold.", player.getName());
+                    logger.error("unknown command else block. folding", player.getName());
                     fold(player);
                 }
                 player.setWaitForAction(false);

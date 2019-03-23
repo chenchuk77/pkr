@@ -26,6 +26,17 @@ public class Pot {
     }
 
 
+    // the max raise in a specific round
+    public int getMaxBet(){
+        int maxBet = 0;
+        for (Bet b: bets) {
+            if (b.getAmount() > maxBet) {
+                maxBet = b.getAmount();
+            }
+        }
+        return maxBet;
+    }
+
     public void removeBet(Player p) {
         List<Bet> betsToRemove = new ArrayList<>();
         for (Bet b: bets) {
