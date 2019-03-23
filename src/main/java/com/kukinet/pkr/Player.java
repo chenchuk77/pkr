@@ -19,6 +19,7 @@ public class Player {
     private int chips;
     private int commited;
     private boolean isChecking;
+    private int position;
 
     private boolean inGame;
     private boolean inHand;
@@ -53,7 +54,6 @@ public class Player {
         this.commited = jsonObject.get("commited").getAsInt();
         this.inGame = jsonObject.get("inGame").getAsBoolean();
         this.inHand = jsonObject.get("inHand").getAsBoolean();
-
     }
 
 
@@ -69,7 +69,6 @@ public class Player {
         this.inGame = true;
         this.inHand = true;
         muckCards();
-
     }
 
 
@@ -112,6 +111,8 @@ public class Player {
     public void setHoleCard1(Card holeCard1) { this.holeCard1 = holeCard1; }
     public void setHoleCard2(Card holeCard2) { this.holeCard2 = holeCard2; }
     public void setTable(Table table) {this.table = table;}
+    public void setSeatPosition(int position) {this.position = position;}
+    public int getSeatPosition() {return this.position;}
 
     public void setInGame(boolean inGame) {this.inGame = inGame;}
     public boolean inHand(){ return this.inHand; }
