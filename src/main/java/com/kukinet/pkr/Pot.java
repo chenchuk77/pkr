@@ -5,6 +5,13 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
+/*
+* Pot is an object that lives for a lifetime of an hand. it stores
+* the bets of all active players (inHand) and updated when raising or calling.
+* at the end of the round if all calls, the bets removed and the mainPot increased
+ * so if no bets, we can assume that no sidepot will be
+* */
+
 public class Pot {
     List<Bet> bets;
     private int mainPot;
@@ -15,7 +22,7 @@ public class Pot {
 
     private Logger logger = LoggerFactory.getLogger(Pot.class);
 
-
+    // new pot created for each hand
     public Pot(List<Player> players){
         bets=new ArrayList<>();
         winners = new ArrayList<>();
@@ -24,7 +31,6 @@ public class Pot {
         foldedPlayersPot = 0;
         this.players=players;
     }
-
 
     // the max raise in a specific round
     public int getMaxBet(){
@@ -37,6 +43,7 @@ public class Pot {
         return maxBet;
     }
 
+    // remove a bet from the pot when player folds
     public void removeBet(Player p) {
         List<Bet> betsToRemove = new ArrayList<>();
         for (Bet b: bets) {
@@ -44,7 +51,6 @@ public class Pot {
                 logger.info("adding {} to mainpot for folded player {}", p.commited(), p.getName());
                 mainPot += b.getPlayer().commited();
                 logger.info("mainpot: {}", mainPot);
-//                bets.remove(b); // concurency problems
                 betsToRemove.add(b);
             }
         }
