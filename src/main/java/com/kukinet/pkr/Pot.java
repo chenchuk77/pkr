@@ -6,10 +6,49 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 
 /*
-* Pot is an object that lives for a lifetime of an hand. it stores
-* the bets of all active players (inHand) and updated when raising or calling.
-* at the end of the round if all calls, the bets removed and the mainPot increased
- * so if no bets, we can assume that no sidepot will be
+* Pot is an object that lives for a lifetime of an hand and its main idea is to help in
+* calculating side-pots.
+* It holds a list of bets ( each bet is a player->amount ) and it gets updates when
+* a player raise/call. the list is ordered (ascending).
+* in a showdown the hands of all remaining players is evaluated, and we look for a
+* winner for that share.
+* the winners get (amount * num_of_bets)
+* the amount decreased from all bets
+* if the bet amount = 0, this bet removed, and also the player (this is the mechanism to
+* allow a player to win only the amount he (commited * num_of_players)
+*
+*
+* examples:
+* board is [2 2 2 3 3]
+* p2 (AA) has 200
+* p3 (KK) has 300
+* p7 (QQ) has 700
+* ----------------------------------
+* simple example: (no side pot)
+* starting round   : pot = {}
+* p2 post sb       : pot = {p2:30}
+* p3 post bb       : pot = {p2:30, p3:60}
+* p7 raise to 100  : pot = {p2:30, p3:60, p7:100}
+* p2 calls 100     : pot = {p3:60, p2:100, p7:100}
+* p3 calls 100     : pot = {p2:100, p3:100, p7:100}
+* since all player has the same amounts in the bets, we can 'clear bets' and move the
+* chips into main pot - it means every one can win
+*                  : pot = {} , mainPot=300
+* in a showdown p2 wins 300
+*
+* ----------------------------------
+* complex example: (with side pots)
+* starting round   : pot = {}
+* p2 post sb       : pot = {p2:30}
+* p3 post bb       : pot = {p2:30, p3:60}
+* p7 raise to 700  : pot = {p2:30, p3:60, p7:700}
+* p2 calls 200     : pot = {p3:60, p2:200, p7:700}
+* p3 calls 300     : pot = {p2:200, p3:300, p7:300} // p7 get refund 400 immediately (no1 can call)
+* * in a showdown p2 wins 600 (200 from each bet) so bet p2 is 'cleared' leaving the pot
+* with 2 bets of 100, p2 is now out of the pot (cant win more)
+*                  : pot = {p3:100, p7:100}
+* next p3 wins 200 ( 100 + 100 ) leaving the pot empty and finish the round
+*
 * */
 
 public class Pot {
