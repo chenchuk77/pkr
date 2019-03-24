@@ -3,10 +3,13 @@ package com.kukinet.pkr;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
 public class CommandValidator {
+    private Logger logger = LoggerFactory.getLogger(CommandValidator.class);
 
     private ActionCommand cmd;
     private Table table;
@@ -31,7 +34,7 @@ public class CommandValidator {
         addFoldOption();
         if (pot.bets.size() == 0){
             addCheckOption();
-            addBetOption();
+            addBetOption(0, player.getChips());
         } else {
             // call value is the diff
             int maxBet = pot.getMaxBet();
@@ -61,10 +64,13 @@ public class CommandValidator {
     private void addCheckOption(){
         validOptions.add("check");
     }
-    private void addBetOption(){
+
+    private void addBetOption(int min, int max){
         validOptions.add("bet");
-        optionAmounts.put("min_bet", 500);
-        optionAmounts.put("max_bet", 5200);
+//        optionAmounts.put("min_bet", 500);
+//        optionAmounts.put("max_bet", 5200);
+        optionAmounts.put("min_bet", min);
+        optionAmounts.put("max_bet", max);
 
     }
     private void addRaiseOption(int min, int max){
@@ -127,6 +133,8 @@ public class CommandValidator {
                 return cmd;
             }
         }
+        logger.warn("invalid command: {} amount: {}", cmd.getAction(), cmd.getAmount());
+
         cmd.setAction("invalid");
         return cmd;
 

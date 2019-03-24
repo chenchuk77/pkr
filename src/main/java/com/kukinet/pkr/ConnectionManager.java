@@ -200,7 +200,7 @@ public class ConnectionManager extends WebSocketServer {
     }
 
     public WebSocket getPlayerWebsocket(Player player){
-        logger.warn("looking ws for player {}", player.getName());
+        //logger.warn("looking ws for player {}", player.getName());
 
         for (Map.Entry<WebSocket, Connection> e : connections.entrySet()) {
             //logger.warn("looping conn entries: {} - {}", e.getKey(), e.getValue());
@@ -211,10 +211,10 @@ public class ConnectionManager extends WebSocketServer {
             //logger.warn("checking if {} == {} ? ", p.getName(), player.getName());
 
             if (p.equals(player)) {
-                logger.warn("player {} found", player.getName());
+                //logger.warn("player {} found", player.getName());
 
                 WebSocket key = e.getKey();
-                logger.warn("ws={} ", key);
+                //logger.warn("ws={} ", key);
                 //logger.warn("ws={} ", c.getWebSocket());
                 return key;
             }

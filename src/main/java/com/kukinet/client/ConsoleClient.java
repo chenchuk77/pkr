@@ -1,10 +1,14 @@
 package com.kukinet.client;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
@@ -21,7 +25,12 @@ public class ConsoleClient extends WebSocketClient implements PlayerStrategy {
     private PlayerDto player;
     private int seat;
     private List<String> communityCards;
-//    private int nextPlayerSeat;
+
+    // for drawing client action buttons
+    private List<String> validOptions;
+    private Map<String, Integer> optionAmounts;
+
+    //    private int nextPlayerSeat;
     private int activePlayerIndex;
     private String statusMessage;
 //    private Map<String, Integer> bets;
@@ -58,6 +67,7 @@ public class ConsoleClient extends WebSocketClient implements PlayerStrategy {
 //    private void nextPlayer(){
 //
 //    }
+
 
     private Integer getPlayerSeatByName(String name){
         for (Map.Entry<Integer, PlayerDto> entry: table.entrySet()){
@@ -238,6 +248,21 @@ public class ConsoleClient extends WebSocketClient implements PlayerStrategy {
             drawTable();
             // my turn
             if (playerName.equals(player.getName())){
+      //    received: {"type":"waitaction","player":"fff","options":["fold","call","raise","allin"],"optionAmounts":{"call":60,"max_raise":10000,"min_raise":0,"allin":10000}}
+
+                // extract valid commands
+                JsonElement optionsArrayJSON = jsonMessage.get("options");
+                Type listType = new TypeToken<List<String>>() {}.getType();
+                validOptions = new Gson().fromJson(optionsArrayJSON, listType);
+
+                // extract valid ranges (chips amount for call/raise)
+                JsonElement optionsAmountsJSON = jsonMessage.get("optionAmounts");
+                Type mapType = new TypeToken<Map<String, Integer>>() {}.getType();
+                optionAmounts = new Gson().fromJson(optionsAmountsJSON, mapType);
+
+//                System.out.println("valid commands: " + validOptions.toString());
+//                System.out.println("valid amounts: " + optionAmounts.toString());
+
                 play();
             }
         }
@@ -276,6 +301,10 @@ public class ConsoleClient extends WebSocketClient implements PlayerStrategy {
         // if the error is fatal then onClose will be called additionally
     }
 
+
+
+//    received: {"type":"waitaction","player":"fff","options":["fold","call","raise","allin"],"optionAmounts":{"call":60,"max_raise":10000,"min_raise":0,"allin":10000}}
+
     @Override
     public void play(){
         JsonObject actionJSON = new JsonObject();
@@ -283,6 +312,9 @@ public class ConsoleClient extends WebSocketClient implements PlayerStrategy {
         // accepts comma-del string and convert to json
         Scanner scanner = new Scanner(System.in);
         System.out.println("your turn: [examples: bet,30 call,30 raise,60 check,0 fold,0]");
+        System.out.println("valid commands: " + validOptions.toString());
+        System.out.println("valid amounts: " + optionAmounts.toString());
+
         String userAction = scanner.nextLine();
         String action;
         int amount;
@@ -312,7 +344,7 @@ public class ConsoleClient extends WebSocketClient implements PlayerStrategy {
             actionJSON.addProperty("amount", 0);
         } else if (action.equals("allin") || action.equals("a")){
             actionJSON.addProperty("action", "allin");
-            actionJSON.addProperty("amount", 0);
+            actionJSON.addProperty("amount", amount);
         } else {
             System.out.println("unknown command, assuming fold.");
             actionJSON.addProperty("action", "fold");
