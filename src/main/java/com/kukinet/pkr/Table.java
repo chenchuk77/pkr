@@ -725,6 +725,10 @@ public class Table {
         }
     }
 
+    public int getBigBlind(){
+        return this.bb;
+    }
+
     public void gameLoop(){
         boolean endRound = false;
         try {

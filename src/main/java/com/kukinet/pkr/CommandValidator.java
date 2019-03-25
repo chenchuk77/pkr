@@ -36,7 +36,12 @@ public class CommandValidator {
         addFoldOption();
         if (pot.bets.size() == 0){
             addCheckOption();
-            addBetOption(0, player.getChips());
+            // min bet is bb or player chips, the lowest value
+            int min_bet = table.getBigBlind() * 2;
+            if (player.getChips() < min_bet){
+                min_bet = player.getChips();
+            }
+            addBetOption(min_bet, player.getChips());
         } else {
             // call value is the diff
             int maxBet = pot.getMaxBet();
@@ -48,7 +53,12 @@ public class CommandValidator {
             // player has more chips than needed to call
             } else {
                 addCallOption(callValue);
-                addRaiseOption(0, player.getChips());
+                // min raise is bb or player chips, the lowest value
+                int min_raise = callValue + table.getBigBlind();
+                if (player.getChips() < min_raise){
+                    min_raise = player.getChips();
+                }
+                addRaiseOption(min_raise, player.getChips());
                 addAllInOption(player.getChips());
             }
         }
@@ -60,7 +70,6 @@ public class CommandValidator {
 
     private void addCallOption(int amount){
         validOptions.add("call");
-        //optionAmounts.put("call", 750);
         optionAmounts.put("call", amount);
     }
 
