@@ -346,9 +346,9 @@ public class ConsoleClient extends WebSocketClient implements PlayerStrategy {
             actionJSON.addProperty("action", "allin");
             actionJSON.addProperty("amount", amount);
         } else {
-            System.out.println("unknown command, assuming fold.");
-            actionJSON.addProperty("action", "fold");
-            actionJSON.addProperty("amount", 0);
+            System.out.println("unknown command, assume hacking.");
+            actionJSON.addProperty("action", action);
+            actionJSON.addProperty("amount", amount);
 
 //            String action  = userAction.split(",")[0];
 //            String amount = userAction.split(",")[1];

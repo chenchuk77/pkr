@@ -21,6 +21,7 @@ public class CommandValidator {
 
     public CommandValidator(){}
 
+    // create a validator with the relevant options
     public CommandValidator(Table table, Player player, Pot pot){
         this.table = table;
         this.player = player;
@@ -30,6 +31,7 @@ public class CommandValidator {
         addOptions();
     }
 
+    // loading the validator with valid options
     private void addOptions(){
         addFoldOption();
         if (pot.bets.size() == 0){
@@ -55,31 +57,29 @@ public class CommandValidator {
     private void addFoldOption(){
         validOptions.add("fold");
     }
+
     private void addCallOption(int amount){
         validOptions.add("call");
         //optionAmounts.put("call", 750);
         optionAmounts.put("call", amount);
-
     }
+
     private void addCheckOption(){
         validOptions.add("check");
     }
 
     private void addBetOption(int min, int max){
         validOptions.add("bet");
-//        optionAmounts.put("min_bet", 500);
-//        optionAmounts.put("max_bet", 5200);
         optionAmounts.put("min_bet", min);
         optionAmounts.put("max_bet", max);
-
     }
+
     private void addRaiseOption(int min, int max){
         validOptions.add("raise");
-//        optionAmounts.put("max_raise", 4000);
-//        optionAmounts.put("min_raise", 1000);
         optionAmounts.put("max_raise", max);
         optionAmounts.put("min_raise", min);
     }
+
     private void addAllInOption(int amount){
         validOptions.add("allin");
         optionAmounts.put("allin", amount);
@@ -89,11 +89,9 @@ public class CommandValidator {
         JsonObject optionsJSON = new JsonObject();
         optionsJSON.addProperty("type", "waitaction");
         optionsJSON.addProperty("player", player.getName());
-
         optionsJSON.add("options", new Gson().toJsonTree(validOptions));
         optionsJSON.add("optionAmounts", new Gson().toJsonTree(optionAmounts));
         return optionsJSON.toString();
-
     }
 
     public ActionCommand validate(ActionCommand cmd) {
@@ -134,9 +132,12 @@ public class CommandValidator {
             }
         }
         logger.warn("invalid command: {} amount: {}", cmd.getAction(), cmd.getAmount());
-
         cmd.setAction("invalid");
+        cmd.setAmount(0);
         return cmd;
+    }
 
+    public boolean isCheckAllowed(){
+        return validOptions.contains("check");
     }
 }

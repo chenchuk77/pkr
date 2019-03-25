@@ -89,87 +89,74 @@ public class Table {
     }
 
     // wait for player, and build a command from the activePlayer. execute and notify all
-    public boolean waitPlayerCommand(Player player){
-        CommandValidator cv = new CommandValidator(this, player, pot);
-
-//        JsonObject requestPlayerAction = new JsonObject();
-//        requestPlayerAction.addProperty("command", "waitaction");
-//        requestPlayerAction.addProperty("player", player.getName());
-//        alertAll(requestPlayerAction.toString());
-        alertAll(cv.getValidOptions());
-
+    public void waitPlayerCommand(Player player) {
+        CommandValidator validator = new CommandValidator(this, player, pot);
+        alertAll(validator.getValidOptions());
         player.setWaitForAction(true);
         logger.info("waiting for player {} to act.", player.getName());
 
-        boolean isActionCompleted = true;
-
         // block until action command accepted
-        for (int i=0; i<ACTION_WAIT_TIME_SEC; i++){
+        for (int i = 0; i < ACTION_WAIT_TIME_SEC; i++) {
             // no command received from client
             if (player.getActionCommand() == null) {
                 try {
+                    logger.error("waiting for {} ({}/{})", player.getName(), i, ACTION_WAIT_TIME_SEC);
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+            // command received from player
             } else {
-                // command received
-
-                isActionCompleted = true;
-
                 ActionCommand cmd = player.getActionCommand();
-                cmd = cv.validate(cmd);
-                if (cmd.getAction().equals("invalid")){
-                    logger.warn("invalid command received from {}, assuming fold.", player.getName());
+                logger.error("----- cmd received - validating cmd:{} amound:{}", cmd.getAction(), cmd.getAmount());
+                cmd = validator.validate(cmd);
+                logger.error("----- cmd post validation cmd:{} amound:{}", cmd.getAction(), cmd.getAmount());
+
+                // if command is invalid goto next iter of for loop
+                if (cmd.getAction().equals("invalid")) {
+                    logger.warn("invalid command received from {}.", player.getName());
+                    alert(player, status("illegal move, please try again..."));
+                    alertAll(validator.getValidOptions());
+                    player.setActionCommand(null);
+                    continue;
+                }
+
+                // command is valid, need to choose correct action
+                if (cmd.getAction().equals("fold")) {
                     fold(player);
-                } else if (cmd.getAction().equals("fold")){
-                    fold(player);
-                } else if (cmd.getAction().equals("check")){
-                    if (this.isCheckAllowed && (this.bettingRound != "preflop" || player.getSeatPosition() == this.bbPosition)){
-                        check(player);
-                        player.setChecking(true);
-                        raiser = player; // no a raiser but opens the round
-                    }
-                    else{
-                        isActionCompleted = false;
-                        logger.info("player {} check not allowed.", player.getName());
-                        alert(player, status("illegal move."));
-                    }
-                } else if (cmd.getAction().equals("call")){
+                } else if (cmd.getAction().equals("check")) {
+                    check(player);
+                    player.setChecking(true);
+                    raiser = player; // no a raiser but opens the round
+                } else if (cmd.getAction().equals("call")) {
                     //call(player, cmd.getAmount());
                     call(player);
-                } else if (cmd.getAction().equals("bet")){
+                } else if (cmd.getAction().equals("bet")) {
                     bet(player, cmd.getAmount());
                     raiser = player; // no a raiser but opens the round
-                } else if (cmd.getAction().equals("raise")){
+                } else if (cmd.getAction().equals("raise")) {
                     raise(player, cmd.getAmount());
                     raiser = player;
-                } else if (cmd.getAction().equals("allin")){
+                } else if (cmd.getAction().equals("allin")) {
                     raise(player, player.getChips());
                     raiser = player;
-                } else {
-                    logger.error("unknown command error, force fold." );
-                    fold(player);
                 }
-
-                if (isActionCompleted){
-                    player.setWaitForAction(false);
-                }
-
-                player.setActionCommand(null);
-
-                return isActionCompleted;
             }
         }
-
-        // if no command received in time
-        logger.info("no response within {} from player {}, folding and sitout.", ACTION_WAIT_TIME_SEC,player.getName());
+        // no command received im time, forcing check/fold.
+        if (player.getActionCommand() == null) {
+            if (validator.isCheckAllowed()) {
+                logger.warn("player {} did not respond in time, assuming check.", player.getName());
+                check(player);
+            } else {
+                logger.warn("player {} did not respond in time, assuming fold.", player.getName());
+                fold(player);
+                player.sitout(); // TODO: CHECK WHY fold is not enough
+            }
+        }
+        // clear command from player, and allow continue the game
         player.setWaitForAction(false);
         player.setActionCommand(null);
-        fold(player);
-        player.sitout();
-
-        return isActionCompleted;
     }
 
     // --------------- player action commands ----------------
@@ -743,26 +730,12 @@ public class Table {
             initGame();
             endRound();
             this.isCheckAllowed = true;
-            // more than 1 player in game
-            // (exit when there is a winner)
-//            while(playersInGame()>1) {
-//                logger.warn("new hand with {}/{} players (inhand/ingame).", playersInHand(), playersInGame());
-//                alertAll(status("new hand # " + handNumber));
-////                initHand();               // set sb, bb, dealer buttons, active-player, fake raiser
-//                alertAll(seats());
-//                Thread.sleep(3000);
 
-                // more than 1 player in hand ( unfolded )
-                // (exit when all folds)
+            // more than 1 player in hand ( unfolded ), exit when all folds
             while (playersInHand() > 1) {
                 logger.warn("new hand with {}/{} players (inhand/ingame).", playersInHand(), playersInGame());
                 alertAll(status("new hand # " + handNumber));
-//                initHand();               // set sb, bb, dealer buttons, active-player, fake raiser
                 alertAll(seats());
-//                Thread.sleep(3000);
-
-//                    alertAll(status("new hand starting..."));
-//                    alertAll(seats());
                 alertAll(betAmounts());
                 alertAll(buttonsPos());
 
@@ -773,22 +746,15 @@ public class Table {
                 while (!activePlayer.equals(raiser) && playersInHand()>1) {
                     logger.info("in hand players: {}",playersInHand());
                     logger.info("preflop: raiser-{}/seat-{}, ap-{}/seat-{}, bb-{}/name-{}, raisedPot-{}", raiser.getName(), seatOf(raiser.getName()), activePlayer.getName(), seatOf(activePlayer.getName()), bbPosition, seats.get(bbPosition).getName(), raisedPot);
-
-                    boolean isActionCompleted = getActionFromPlayer();
-                    if (isActionCompleted) {
-                        activePlayer = nextPlayer();
-                    }
-                        // bb option. if no raise
+                    getActionFromPlayer();
+                    activePlayer = nextPlayer();
+                    // bb option. if no raise
                     if (isBigBlind(activePlayer) && !raisedPot && playersInHand() >= 2){
                         logger.info("preflop: (bb option, no raise yet): raiser-{}/seat-{}, ap-{}/seat-{}, bb-{}/name-{}, raisedPot-{}", raiser.getName(), seatOf(raiser.getName()), activePlayer.getName(), seatOf(activePlayer.getName()), bbPosition, seats.get(bbPosition).getName(), raisedPot);
-                        isActionCompleted = getActionFromPlayer();
-                        if (isActionCompleted){
-                            if (activePlayer.isChecking()) continue;
-                            activePlayer = nextPlayer();
-                            raisedPot = true;
-                        }
+                        getActionFromPlayer();
+                        activePlayer = nextPlayer();
+                        raisedPot = true;
                     }
-
                 }
 
                 if (allOtherFolded()){
@@ -811,14 +777,12 @@ public class Table {
                     initBettingRound("flop");
                     while (!activePlayer.equals(raiser)) {
                         logger.info("flop: raiser-{}/seat-{}, ap-{}/seat-{}, bb-{}/name-{}, raisedPot-{}", raiser.getName(), seatOf(raiser.getName()), activePlayer.getName(), seatOf(activePlayer.getName()), bbPosition, seats.get(bbPosition).getName(), raisedPot);
-                        boolean isActionCompleted = getActionFromPlayer();
-                        if (isActionCompleted){
-                            activePlayer = nextPlayer();
-                            logger.info("flop: ap is now {}/seat-{}",activePlayer.getName(), seatOf(activePlayer.getName()));
-                            if (allPlayerChecked()){
-                                logger.info("flop: all players checked, exit round");
-                                break;
-                            }
+                        getActionFromPlayer();
+                        activePlayer = nextPlayer();
+                        logger.info("flop: ap is now {}/seat-{}",activePlayer.getName(), seatOf(activePlayer.getName()));
+                        if (allPlayerChecked()){
+                            logger.info("flop: all players checked, exit round");
+                            break;
                         }
                     }
                 }
@@ -842,14 +806,12 @@ public class Table {
                     initBettingRound("turn");
                     while (!activePlayer.equals(raiser)) {
                         logger.warn("turn: raiser is {}/{}, activePlayer is {}/{}", seatOf(raiser.getName()), raiser.getName(), seatOf(activePlayer.getName()), activePlayer.getName()  );
-                        boolean isActionCompleted = getActionFromPlayer();
-                        if (isActionCompleted){
-                            activePlayer = nextPlayer();
-                            logger.info("turn: ap is now {}/seat-{}",activePlayer.getName(), seatOf(activePlayer.getName()));
-                            if (allPlayerChecked()){
-                                logger.info("turn: all players checked, exit round");
-                                break;
-                            }
+                        getActionFromPlayer();
+                        activePlayer = nextPlayer();
+                        logger.info("turn: ap is now {}/seat-{}",activePlayer.getName(), seatOf(activePlayer.getName()));
+                        if (allPlayerChecked()){
+                            logger.info("turn: all players checked, exit round");
+                            break;
                         }
                     }
                 }
@@ -869,24 +831,16 @@ public class Table {
                 this.isCheckAllowed = true;
                 alertAll(status("dealing river"));
                 dealRiver();
-//                Thread.sleep(1000);
                 if (betRoundNeeded()){
                     initBettingRound("river");
                     while (!activePlayer.equals(raiser)) {
                         logger.warn("river: raiser is {}/{}, activePlayer is {}/{}", seatOf(raiser.getName()), raiser.getName(), seatOf(activePlayer.getName()), activePlayer.getName()  );
-                        boolean isActionCompleted = getActionFromPlayer();
-                        if (isActionCompleted){
-                            activePlayer = nextPlayer();
-                            logger.info("river: ap is now {}/seat-{}",activePlayer.getName(), seatOf(activePlayer.getName()));
-                            if (allPlayerChecked()){
-                                logger.info("river: all players checked.");
-//                            alertAll(status("going into showdown"));
-//                            alertAll(showdown());
-//                            rankHands();
-//                            alertAll(potShare());
-//                           // sendShowdownHands();
-                                break;
-                            }
+                        getActionFromPlayer();
+                        activePlayer = nextPlayer();
+                        logger.info("river: ap is now {}/seat-{}",activePlayer.getName(), seatOf(activePlayer.getName()));
+                        if (allPlayerChecked()){
+                            logger.info("river: all players checked.");
+                            break;
                         }
                     }
                 }
@@ -957,10 +911,10 @@ public class Table {
     }
 
     // get action (blocking) and broadcast the move
-    private boolean getActionFromPlayer(){
+    private void getActionFromPlayer(){
         // force post sb
 
-        boolean isCompleted = true;
+//        boolean isCompleted = true;
 
         if (activePlayer.equals(seats.get(sbPosition)) && pot.getAllBets() == 0){
             //pot += activePlayer.postSmallBlind(sb);
@@ -981,10 +935,11 @@ public class Table {
             raisedPot = false;
             // block until response from client
         } else {
-            isCompleted = waitPlayerCommand(activePlayer);
+            waitPlayerCommand(activePlayer);
+//            isCompleted = waitPlayerCommand(activePlayer);
         }
 
-        return isCompleted;
+//        return isCompleted;
     }
 
     // reply to a client request for full update (after reconnect)
