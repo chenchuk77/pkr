@@ -329,7 +329,7 @@ public class ConsoleClient extends WebSocketClient implements PlayerStrategy {
 
         if (action.equals("call") || action.equals("c")){
             actionJSON.addProperty("action", "call");
-            actionJSON.addProperty("amount", amount);
+            actionJSON.addProperty("amount", optionAmounts.get("call"));
         } else if (action.equals("fold") || action.equals("f")){
             actionJSON.addProperty("action", "fold");
             actionJSON.addProperty("amount", 0);
@@ -344,7 +344,7 @@ public class ConsoleClient extends WebSocketClient implements PlayerStrategy {
             actionJSON.addProperty("amount", 0);
         } else if (action.equals("allin") || action.equals("a")){
             actionJSON.addProperty("action", "allin");
-            actionJSON.addProperty("amount", amount);
+            actionJSON.addProperty("amount", optionAmounts.get("allin"));
         } else {
             System.out.println("unknown command, assume hacking.");
             actionJSON.addProperty("action", action);

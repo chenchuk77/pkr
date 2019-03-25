@@ -100,7 +100,7 @@ public class Table {
             // no command received from client
             if (player.getActionCommand() == null) {
                 try {
-                    logger.error("waiting for {} ({}/{})", player.getName(), i, ACTION_WAIT_TIME_SEC);
+                    //logger.error("waiting for {} ({}/{})", player.getName(), i, ACTION_WAIT_TIME_SEC);
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -118,7 +118,7 @@ public class Table {
                     alert(player, status("illegal move, please try again..."));
                     alertAll(validator.getValidOptions());
                     player.setActionCommand(null);
-                    continue;
+                    continue; // retry
                 }
 
                 // command is valid, need to choose correct action
@@ -141,6 +141,7 @@ public class Table {
                     raise(player, player.getChips());
                     raiser = player;
                 }
+                break; // exit after successful command execution
             }
         }
         // no command received im time, forcing check/fold.
