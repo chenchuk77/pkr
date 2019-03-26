@@ -33,7 +33,7 @@ public class Table {
     private int bet;
 //    private int pot;
     private Pot pot;
-    private boolean raisedPot;
+    private boolean bbHasOption;
     private boolean isCheckAllowed;
 
     private int sbPosition;
@@ -199,7 +199,7 @@ public class Table {
         pot.addBet(new Bet(amount, player));
         //pot += amount;
         raiser = player;
-        raisedPot = true;
+        bbHasOption = false;
         logger.info("finish bet logic: ap {} raiser {}.", activePlayer.getName(), player.getName());
         alertAll(status(player.getName() + " bet " + amount + "."));
         alertAll(sendPlayerMove("bet", amount));
@@ -214,7 +214,7 @@ public class Table {
         pot.addBet(new Bet(amount, player));
 //        pot += amount;
         raiser = player;
-        raisedPot = true;
+        bbHasOption = false;
         alertAll(status(player.getName() + " raise to " + amount + "."));
         alertAll(sendPlayerMove("raise", amount));
     }
@@ -402,7 +402,7 @@ public class Table {
             p.setChecking(false);
         }
         raiser = new Player(); // just for not null, overridden by bb anyway
-        raisedPot = true;      // will be false by bb to allow complete round
+        bbHasOption = false;      // will be false by bb to allow complete round
 
         alertAll(seats()); // update all clients
 
@@ -750,18 +750,18 @@ public class Table {
                 logger.error("--- PRE-FLOP ROUND STARTED ---.");
                 while (!activePlayer.equals(raiser) && playersInHand()>1) {
                     logger.info("in hand players: {}",playersInHand());
-                    logger.info("preflop: raiser-{}/seat-{}, ap-{}/seat-{}, bb-{}/name-{}, raisedPot-{}", raiser.getName(), seatOf(raiser.getName()), activePlayer.getName(), seatOf(activePlayer.getName()), bbPosition, seats.get(bbPosition).getName(), raisedPot);
+                    logger.info("preflop: raiser-{}/seat-{}, ap-{}/seat-{}, bb-{}/name-{}, bbHasOption-{}", raiser.getName(), seatOf(raiser.getName()), activePlayer.getName(), seatOf(activePlayer.getName()), bbPosition, seats.get(bbPosition).getName(), bbHasOption);
                     getActionFromPlayer();
                     activePlayer = nextPlayer();
                     // bb option. if no raise
-                    if (isBigBlind(activePlayer) && !raisedPot && playersInHand() >= 2){
-                        logger.info("preflop: (bb option, no raise yet): raiser-{}/seat-{}, ap-{}/seat-{}, bb-{}/name-{}, raisedPot-{}", raiser.getName(), seatOf(raiser.getName()), activePlayer.getName(), seatOf(activePlayer.getName()), bbPosition, seats.get(bbPosition).getName(), raisedPot);
+                    if (isBigBlind(activePlayer) && bbHasOption && playersInHand() >= 2){
+                        logger.info("preflop: (bb option, no raise yet): raiser-{}/seat-{}, ap-{}/seat-{}, bb-{}/name-{}, bbHasOption-{}", raiser.getName(), seatOf(raiser.getName()), activePlayer.getName(), seatOf(activePlayer.getName()), bbPosition, seats.get(bbPosition).getName(), bbHasOption);
                         getActionFromPlayer();
                         if (activePlayer.isChecking()){
                             break;
                         }
                         activePlayer = nextPlayer();
-                        raisedPot = true;
+                        bbHasOption = false;
                     }
                 }
                 if (allOtherFolded()){
@@ -783,7 +783,7 @@ public class Table {
                 if (betRoundNeeded()){
                     initBettingRound("flop");
                     while (!activePlayer.equals(raiser)) {
-                        logger.info("flop: raiser-{}/seat-{}, ap-{}/seat-{}, bb-{}/name-{}, raisedPot-{}", raiser.getName(), seatOf(raiser.getName()), activePlayer.getName(), seatOf(activePlayer.getName()), bbPosition, seats.get(bbPosition).getName(), raisedPot);
+                        logger.info("flop: raiser-{}/seat-{}, ap-{}/seat-{}, bb-{}/name-{}, bbHasOption-{}", raiser.getName(), seatOf(raiser.getName()), activePlayer.getName(), seatOf(activePlayer.getName()), bbPosition, seats.get(bbPosition).getName(), bbHasOption);
                         getActionFromPlayer();
                         activePlayer = nextPlayer();
                         logger.info("flop: ap is now {}/seat-{}",activePlayer.getName(), seatOf(activePlayer.getName()));
@@ -913,7 +913,7 @@ public class Table {
         return playersInHand() == 1;
     }
 
-    private boolean isBigBlind(Player player) {
+    public boolean isBigBlind(Player player) {
         return player == seats.get(bbPosition);
     }
 
@@ -939,7 +939,7 @@ public class Table {
             pot.addBet(new Bet(activePlayer.postBigBlind(bb), activePlayer));
             alertAll(sendPlayerMove("bb", bb));
             raiser = activePlayer;
-            raisedPot = false;
+            bbHasOption = true;
             // block until response from client
         } else {
             waitPlayerCommand(activePlayer);

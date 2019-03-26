@@ -50,11 +50,6 @@ public class CommandValidator {
             }
             addBetOption(min_bet, player.getChips());
         } else {
-            // in case all folds and sb calls (preflop) there are 2 bets
-            // with amount upto 2bb
-            if (pot.bets.size() == 2 && pot.getAllBets() <= 2 * table.getBigBlind()){
-                addCheckOption();
-            }
 
             // call value is the diff
             int maxBet = pot.getMaxBet();
@@ -75,6 +70,11 @@ public class CommandValidator {
                 addAllInOption(player.getChips());
             }
         }
+        // in case all folds and sb calls (preflop) there are 2 bets with amount upto 2bb
+        if (table.isBigBlind(player) && pot.bets.size() == 2 && pot.getAllBets() <= 2 * table.getBigBlind()){
+            addCheckOption();
+            removeCallOption();
+        }
     }
 
     private void addFoldOption(){
@@ -84,6 +84,10 @@ public class CommandValidator {
     private void addCallOption(int amount){
         validOptions.add("call");
         optionAmounts.put("call", amount);
+    }
+    private void removeCallOption(){
+        validOptions.remove("call");
+        optionAmounts.remove("call");
     }
 
     private void addCheckOption(){
@@ -166,5 +170,4 @@ public class CommandValidator {
         cmd.setAmount(0);
         return cmd;
     }
-
 }
