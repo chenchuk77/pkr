@@ -8,6 +8,15 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
+/*
+ * Command validator instantiated by the Table each time it waits for a player command.
+ * it has a list of the valid options, and a map of valid amounts, both updated upon construction
+ * (from the current pot, bets, state, etc), and the validator is said to be 'loaded'.
+ *
+ * when a command received, the received content is validated against that 'loaded' validator
+ * and the result is the command itself if its valid or {"action": "invalid", "amount": 0} if invalid.
+ * */
+
 public class CommandValidator {
     private Logger logger = LoggerFactory.getLogger(CommandValidator.class);
 
@@ -19,8 +28,6 @@ public class CommandValidator {
     private List<Object> validOptions;
     private Map<String, Integer> optionAmounts;
 
-    public CommandValidator(){}
-
     // create a validator with the relevant options
     public CommandValidator(Table table, Player player, Pot pot){
         this.table = table;
@@ -31,7 +38,7 @@ public class CommandValidator {
         addOptions();
     }
 
-    // loading the validator with valid options
+    // loading the validator with valid options/ranges
     private void addOptions(){
         addFoldOption();
         if (pot.bets.size() == 0){
@@ -94,6 +101,12 @@ public class CommandValidator {
         optionAmounts.put("allin", amount);
     }
 
+
+    public boolean isCheckAllowed(){
+        return validOptions.contains("check");
+    }
+
+    // JSON string with valid options/amounts to be sent to the player
     public String getValidOptions(){
         JsonObject optionsJSON = new JsonObject();
         optionsJSON.addProperty("type", "waitaction");
@@ -103,6 +116,7 @@ public class CommandValidator {
         return optionsJSON.toString();
     }
 
+    // check if a command is valid (if appears in list/map), return this command if valid
     public ActionCommand validate(ActionCommand cmd) {
         if (cmd.getAction().equals("fold")) {
             if (validOptions.contains("fold")) {
@@ -140,13 +154,11 @@ public class CommandValidator {
                 return cmd;
             }
         }
+        // command is invalid, modify it to invalid/0 and return it
         logger.warn("invalid command: {} amount: {}", cmd.getAction(), cmd.getAmount());
         cmd.setAction("invalid");
         cmd.setAmount(0);
         return cmd;
     }
 
-    public boolean isCheckAllowed(){
-        return validOptions.contains("check");
-    }
 }
