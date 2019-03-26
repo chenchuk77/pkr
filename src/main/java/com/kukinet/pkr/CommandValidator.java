@@ -44,7 +44,7 @@ public class CommandValidator {
         if (pot.bets.size() == 0){
             addCheckOption();
             // min bet is bb or player chips, the lowest value
-            int min_bet = table.getBigBlind() * 2;
+            int min_bet = table.getBigBlind();
             if (player.getChips() < min_bet){
                 min_bet = player.getChips();
             }
@@ -62,7 +62,7 @@ public class CommandValidator {
             } else {
                 addCallOption(callValue);
                 // min raise is bb or player chips, the lowest value
-                int min_raise = callValue + table.getBigBlind();
+                int min_raise = maxBet + table.getBigBlind();
                 if (player.getChips() < min_raise){
                     min_raise = player.getChips();
                 }
@@ -71,7 +71,7 @@ public class CommandValidator {
             }
         }
         // in case all folds and sb calls (preflop) there are 2 bets with amount upto 2bb
-        if (table.isBigBlind(player) && pot.bets.size() == 2 && pot.getAllBets() <= 2 * table.getBigBlind()){
+        if (table.isBigBlind(player) && table.getBigBlind() == pot.getMaxBet()){
             addCheckOption();
             removeCallOption();
         }
