@@ -757,11 +757,13 @@ public class Table {
                     if (isBigBlind(activePlayer) && !raisedPot && playersInHand() >= 2){
                         logger.info("preflop: (bb option, no raise yet): raiser-{}/seat-{}, ap-{}/seat-{}, bb-{}/name-{}, raisedPot-{}", raiser.getName(), seatOf(raiser.getName()), activePlayer.getName(), seatOf(activePlayer.getName()), bbPosition, seats.get(bbPosition).getName(), raisedPot);
                         getActionFromPlayer();
+                        if (activePlayer.isChecking()){
+                            break;
+                        }
                         activePlayer = nextPlayer();
                         raisedPot = true;
                     }
                 }
-
                 if (allOtherFolded()){
                     activePlayer.setChips(activePlayer.getChips() + pot.getAllBets());
                     logger.info("preflop: raiser-{}/seat-{} didnt get called", raiser.getName(), seatOf(raiser.getName()));
