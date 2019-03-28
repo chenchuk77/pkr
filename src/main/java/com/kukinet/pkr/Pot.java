@@ -105,6 +105,9 @@ public class Pot {
             if (b.getPlayer().equals(p)) {
                 logger.info("bet exist for {}, of {}. adding: {}", b.getPlayer().getName(), b.getPlayer().commited(), bet.getAmount());
                 b.getPlayer().setCommited(b.getPlayer().commited() + bet.getAmount());
+                // TODO: same value appears twice in a Bet ( b.amount and b.getPlayer.commited
+                // TODO: need to check why its necessary, meantime must update both
+                b.setAmount(b.getPlayer().commited());
                 //bets.put(bets.get(0).getPlayer(), betValue/getNumOfWinners());
                 bets.sort(Comparator.comparing(x -> x.getPlayer().commited()));
                 logger.info("sorting bets: {}", bets);
@@ -160,6 +163,26 @@ public class Pot {
         }
 
     }
+
+    public boolean hasPlayerBet(Player player){
+        if (bets.isEmpty()) return false;
+        for (Bet b: bets) {
+            if (b.getPlayer().equals(player)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    public int getPlayerBetAmount(Player player){
+        for (Bet b: bets) {
+            if (b.getPlayer().equals(player)) {
+                return b.getPlayer().commited();
+            }
+        }
+        return 0;
+
+    }
+
 
     public void refundUncoveredBet(){
         if (bets.size() < 2) return;

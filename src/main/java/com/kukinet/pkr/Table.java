@@ -207,16 +207,24 @@ public class Table {
 
     public void raise(Player player, int requestedAmount){
 
+        if (pot.hasPlayerBet(player)){
+            requestedAmount = requestedAmount - pot.getPlayerBetAmount(player);
+            logger.info("player {} will raise by {}.", player.getName(), requestedAmount);
+        }
+
         this.isCheckAllowed = false;
 
         int amount = player.raise(requestedAmount);
-        logger.info("player {} raise {}.", player.getName(), amount);
+//        logger.info("player {} raise {}.", player.getName(), amount);
+        logger.info("player {} raise {}.", player.getName(), player.commited());
         pot.addBet(new Bet(amount, player));
 //        pot += amount;
         raiser = player;
         bbHasOption = false;
-        alertAll(status(player.getName() + " raise to " + amount + "."));
-        alertAll(sendPlayerMove("raise", amount));
+//        alertAll(status(player.getName() + " raise to " + amount + "."));
+        alertAll(status(player.getName() + " raise to " + player.commited() + "."));
+//        alertAll(sendPlayerMove("raise", amount));
+        alertAll(sendPlayerMove("raise", player.commited()));
     }
 
     private int playersInGame(){

@@ -40,15 +40,19 @@ public class CommandValidator {
 
     // loading the validator with valid options/ranges
     private void addOptions(){
+        logger.warn("::: adding fold option");
         addFoldOption();
         if (pot.bets.size() == 0){
+            logger.warn("::: adding check option, pot.bets.size()={}", pot.bets.size());
             addCheckOption();
             // min bet is bb or player chips, the lowest value
             int min_bet = table.getBigBlind();
             if (player.getChips() < min_bet){
                 min_bet = player.getChips();
             }
+            logger.warn("::: adding bet option, {}-{}", min_bet, player.getChips());
             addBetOption(min_bet, player.getChips());
+            addAllInOption(player.getChips());
         } else {
 
             // call value is the diff
@@ -57,21 +61,27 @@ public class CommandValidator {
             // player doesnt have full calling chips
             if (player.getChips() < callValue){
                 callValue = player.getChips();
+                logger.warn("::: adding call option with {}", callValue);
                 addCallOption(callValue);
             // player has more chips than needed to call
             } else {
+                logger.warn("::: adding call option with {}", callValue);
                 addCallOption(callValue);
                 // min raise is bb or player chips, the lowest value
                 int min_raise = maxBet + table.getBigBlind();
                 if (player.getChips() < min_raise){
                     min_raise = player.getChips();
                 }
+                logger.warn("::: adding raise/allin options with {}-{}", min_raise, player.getChips());
                 addRaiseOption(min_raise, player.getChips());
                 addAllInOption(player.getChips());
             }
         }
         // in case all folds and sb calls (preflop) there are 2 bets with amount upto 2bb
         if (table.isBigBlind(player) && table.getBigBlind() == pot.getMaxBet()){
+            logger.warn("::: bb option: adding check option, removing call. pot.getMaxBet()={}", pot.getMaxBet());
+            logger.warn("::: pot_obj={}", pot.toString());
+
             addCheckOption();
             removeCallOption();
         }
