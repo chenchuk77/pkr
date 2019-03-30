@@ -138,7 +138,7 @@ public class Table {
                     raise(player, cmd.getAmount());
                     raiser = player;
                 } else if (cmd.getAction().equals("allin")) {
-                    raise(player, player.getChips());
+                    raise(player, player.getChips() + player.commited());
                     raiser = player;
                 }
                 break; // exit after successful command execution
@@ -279,7 +279,8 @@ public class Table {
         logger.info("checking player:{} ", activePlayer.getName());
 
         // recursively look for the next inHand player (skip if no chips)
-        if (!activePlayer.inHand() || activePlayer.getChips() <= 0){
+//        if (!activePlayer.inHand() || activePlayer.getChips() <= 0){
+        if (!activePlayer.inHand()){
         //while (!activePlayer.inHand()){
                 logger.info("player:{} / chips:{} inhand:{} trying next...", activePlayer.getName(), activePlayer.getChips(), activePlayer.inHand());
             activePlayer = nextPlayer();
@@ -311,6 +312,7 @@ public class Table {
         for (Player p: seats.values()){
             // remove losing players
             if (p.getChips() <= 0) p.setInGame(false);
+            if (p.getChips() <= 0) p.setInHand(false);
             // clear hands
             if (p.inGame()){
                 p.setInHand(true);
@@ -418,9 +420,14 @@ public class Table {
 
 //    private
     private void moveButtons(){
-        if (sbPosition == MAX_PLAYERS-1) sbPosition = 0; else sbPosition ++;
-        if (bbPosition == MAX_PLAYERS-1) bbPosition = 0; else bbPosition ++;
-        if (dealerPosition== MAX_PLAYERS-1) dealerPosition = 0; else dealerPosition ++;
+        if (sbPosition == MAX_PLAYERS-1) sbPosition = 0;
+        else do sbPosition ++; while (!seats.get(sbPosition).inHand());
+
+        if (bbPosition == MAX_PLAYERS-1) bbPosition = 0;
+        else do bbPosition ++; while (!seats.get(bbPosition).inHand());
+
+        if (dealerPosition== MAX_PLAYERS-1) dealerPosition = 0;
+        else do dealerPosition ++; while (!seats.get(dealerPosition).inHand());
         // TODO: fix empty seats .... if (seats.get(activePlayer)){
     }
 
