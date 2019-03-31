@@ -5,6 +5,8 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.kukinet.cards.Card;
 import com.kukinet.cards.Deck;
+import com.kukinet.cards.FakeDeck4pEven;
+import com.kukinet.cards.RealDeck;
 import org.java_websocket.WebSocket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -307,7 +309,7 @@ public class Table {
     private void endRound(){
         this.handNumber ++;
         this.communityCards = null;
-        this.deck = new Deck();
+        this.deck = new FakeDeck4pEven();
         this.pot = new Pot(new ArrayList<Player>(seats.values()));
         for (Player p: seats.values()){
             // remove losing players
@@ -324,7 +326,7 @@ public class Table {
 //
 ////        alertAll(status("newhand");
 //            this.communityCards = null;
-//            this.deck = new Deck();
+//            this.realDeck = new RealDeck();
 //            this.pot = new Pot(new ArrayList<Player>(seats.values()));
 //            for (Player p: seats.values()){
 //                if (p.inGame()){
@@ -432,7 +434,7 @@ public class Table {
     }
 
     private void dealTurn(){
-        deck.pop(); // remove one card from the deck before dealing turn
+        deck.pop(); // remove one card from the realDeck before dealing turn
         Card turn = deck.pop();
         communityCards.add(turn);
         sendCommunityCardsUpdate();
@@ -447,7 +449,7 @@ public class Table {
     }
 
     private void dealRiver(){
-        deck.pop(); // remove one card from the deck before dealing river
+        deck.pop(); // remove one card from the realDeck before dealing river
         Card river = deck.pop();
         communityCards.add(river);
         sendCommunityCardsUpdate();
@@ -463,7 +465,7 @@ public class Table {
     }
 
     private void dealFlop(){
-        deck.pop(); // remove one card from the deck before dealing flop
+        deck.pop(); // remove one card from the realDeck before dealing flop
 
         communityCards = new ArrayList<>();
         Card f1 = deck.pop();
@@ -755,6 +757,7 @@ public class Table {
             while (playersInHand() > 1) {
                 logger.warn("new hand with {}/{} players (inhand/ingame).", playersInHand(), playersInGame());
                 alertAll(status("new hand # " + handNumber));
+                Thread.sleep(3000);
                 alertAll(seats());
                 alertAll(betAmounts());
                 alertAll(buttonsPos());
@@ -783,6 +786,9 @@ public class Table {
                     activePlayer.setChips(activePlayer.getChips() + pot.getAllBets());
                     logger.info("preflop: raiser-{}/seat-{} didnt get called", raiser.getName(), seatOf(raiser.getName()));
                     alertAll(potShareAllFolded());
+                    //alertAll(status(potShareAllFolded()));
+                    Thread.sleep(3000);
+
                     endRound();
                     logger.info("preflop: round end, no callers.");
                     continue;
@@ -794,7 +800,7 @@ public class Table {
                 this.isCheckAllowed = true;
                 alertAll(status("dealing flop"));
                 dealFlop();
-//                Thread.sleep(1000);
+                Thread.sleep(3000);
                 if (betRoundNeeded()){
                     initBettingRound("flop");
                     while (!activePlayer.equals(raiser)) {
@@ -812,6 +818,9 @@ public class Table {
                     activePlayer.setChips(activePlayer.getChips() + pot.getAllBets());
                     logger.info("preflop: raiser-{}/seat-{} didnt get called", raiser.getName(), seatOf(raiser.getName()));
                     alertAll(potShareAllFolded());
+//                    alertAll(status(potShareAllFolded()));
+                    Thread.sleep(3000);
+
                     endRound();
                     logger.info("preflop: round end, no callers.");
                     continue;
@@ -823,7 +832,7 @@ public class Table {
                 this.isCheckAllowed = true;
                 alertAll(status("dealing turn"));
                 dealTurn();
-//                Thread.sleep(1000);
+                Thread.sleep(3000);
                 if (betRoundNeeded()){
                     initBettingRound("turn");
                     while (!activePlayer.equals(raiser)) {
@@ -841,6 +850,9 @@ public class Table {
                     activePlayer.setChips(activePlayer.getChips() + pot.getAllBets());
                     logger.info("preflop: raiser-{}/seat-{} didnt get called", raiser.getName(), seatOf(raiser.getName()));
                     alertAll(potShareAllFolded());
+//                    alertAll(status(potShareAllFolded()));
+                    Thread.sleep(3000);
+
                     endRound();
                     logger.info("preflop: round end, no callers.");
 //                    endRound();
@@ -853,6 +865,8 @@ public class Table {
                 this.isCheckAllowed = true;
                 alertAll(status("dealing river"));
                 dealRiver();
+                Thread.sleep(3000);
+
                 if (betRoundNeeded()){
                     initBettingRound("river");
                     while (!activePlayer.equals(raiser)) {
@@ -873,6 +887,10 @@ public class Table {
                 alertAll(showdown());
                 rankHands();
                 alertAll(potShare());
+//                alertAll(status(potShare()));
+                Thread.sleep(3000);
+
+
 //                    }
                 // if reach here, maybe some player down, exit the loop for checking ingame
                 //removeLosers();

@@ -196,6 +196,16 @@ public class ConsoleClient extends WebSocketClient implements PlayerStrategy {
             drawTable();
 
         }
+        if (message.contains("potshare")) {
+            JsonObject potShareJSON = new Gson().fromJson(message, JsonObject.class);
+            System.out.println("potshare update received.");
+            potShareJSON.remove("type");
+            JsonElement je = potShareJSON;
+            Type mapType = new TypeToken<Map<String, Integer>>() {}.getType();
+            Map<String,Integer> potShareMap = new Gson().fromJson(je, mapType);
+            System.out.println( "pot share xxxxx received." + potShareMap.toString());
+            setStatusMessage("winners: " + potShareMap.toString());
+        }
 
         // player move update JSON
         // {"type":"playermove","seat":2,"player":{"name":"fff","startingStack":10000,"effectiveStack":10000,"commited":0,"inGame":true,"inHand":false,"strHole1":"00","strHole2":"00"},"command":"fold","value":0}
@@ -266,14 +276,16 @@ public class ConsoleClient extends WebSocketClient implements PlayerStrategy {
                 play();
             }
         }
-        // update ctx player with my hole cards
+
         if (message.contains("status")) {
             System.out.println("status update received.");
             JsonObject statusJSON = new Gson().fromJson(message, JsonObject.class);
             statusMessage = statusJSON.get("value").getAsString();
-            drawTable();
+            setStatusMessage(statusMessage);
+//            drawTable();
 
         }
+
 
         // update ctx player with my hole cards
         if (message.contains("new hand")){
@@ -517,6 +529,12 @@ public class ConsoleClient extends WebSocketClient implements PlayerStrategy {
         }
         return "    ";
     }
+
+    private void setStatusMessage(String message){
+        statusMessage = message;
+        drawTable();
+    }
+
 //
 //        //if (seatIndex ==
 //
