@@ -66,6 +66,10 @@ public class Table {
         this.handNumber = 0;
     }
 
+    public String getBettingRound() {
+        return bettingRound;
+    }
+
     private void seatPlayers(List<Player> players){
         if (players.size() < MIN_PLAYERS || players.size() > MAX_PLAYERS){
             logger.warn("illegal number of players to seat ({}).", players.size());

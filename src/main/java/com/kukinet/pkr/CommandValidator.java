@@ -77,8 +77,8 @@ public class CommandValidator {
                 addAllInOption(player.getChips());
             }
         }
-        // in case all folds and sb calls (preflop) there are 2 bets with amount upto 2bb
-        if (table.isBigBlind(player) && table.getBigBlind() == pot.getMaxBet()){
+        // in case few calls (preflop) there are few bets, in this case bb can check/raise, no call option
+        if (table.isBigBlind(player) && table.getBettingRound().equals("preflop") && table.getBigBlind() == pot.getMaxBet()){
             logger.warn("::: bb option: adding check option, removing call. pot.getMaxBet()={}", pot.getMaxBet());
             logger.warn("::: pot_obj={}", pot.toString());
 
