@@ -2,10 +2,13 @@ package com.kukinet.pkr;
 
 import com.kukinet.cards.Card;
 import com.google.gson.JsonObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 
 public class Player {
+    private Logger logger = LoggerFactory.getLogger(Player.class);
 
     // will not be serialized with gson
     private transient Table table;
@@ -161,17 +164,20 @@ public class Player {
     public void chk(){
 
     }
+
+    // calling upto the requested amount
     public int call(int amount){
+        logger.info("player {} try to call:{}.", getName(), amount);
         if (amount <= chips){
+            logger.info("player {} has chips:{} (if) amount:{}.", getName(), chips, amount);
             chips = chips - amount;
-//            commited = commited + amount;
-            return amount;
         } else {
-            // all-in
-            call(chips);
+            amount = chips;
+            chips = 0;
         }
-        return 0 ;
+        return amount;
     }
+
     public int bet(int amount){
         if (amount <= chips){
             chips = chips - amount;
