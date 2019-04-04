@@ -4,3 +4,5 @@ target/
 .idea/
 ranker/data/HandRanks.dat
 HandRanks.dat
+logs/spring-boot-logger.log
+logs/archived
