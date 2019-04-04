@@ -8,6 +8,15 @@ import java.util.Map;
 public class Utils {
 
 
+
+    public static boolean isPair(String cardsString){
+        return cardsString.charAt(0) == cardsString.charAt(2);
+    }
+
+    public static boolean isSuited(String cardsString){
+        return cardsString.charAt(1) == cardsString.charAt(3);
+    }
+
     // example data:
     // {"0":{"name":"ddd","startingStack":10000,"effectiveStack":9970,"holeCard1":{"suit":"s","rank":"Q"},"holeCard2":{"suit":"c","rank":"T"},"commited":30,"inGame":true,"inHand":true},"1":{"name":"eee","startingStack":10000,"effectiveStack":9940,"holeCard1":{"suit":"h","rank":"_4"},"holeCard2":{"suit":"s","rank":"_8"},"commited":60,"inGame":true,"inHand":true},"2":{"name":"fff","startingStack":10000,"effectiveStack":10000,"holeCard1":{"suit":"s","rank":"_2"},"holeCard2":{"suit":"d","rank":"_7"},"commited":0,"inGame":true,"inHand":true},"3":{"name":"iii","startingStack":10000,"effectiveStack":10000,"holeCard1":{"suit":"s","rank":"_4"},"holeCard2":{"suit":"c","rank":"_9"},"commited":0,"inGame":true,"inHand":true}}
     public static Map<Integer, PlayerDto> parseTableWithHandsJSON(JsonObject tableStateJSON){
