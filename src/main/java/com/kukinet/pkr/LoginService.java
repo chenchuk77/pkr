@@ -32,7 +32,7 @@ public class LoginService {
         for (User user: users){
             if (user.getName().equals(name)){
                 if (user.getPassword().equals(password)){
-                    logger.debug("user {} authenticated.", name);
+                    logger.info("user {} authenticated.", name);
                     return user;
                 } else { logger.error("incorrect password for user {}.", name); }
             }

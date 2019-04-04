@@ -70,12 +70,13 @@ public class Game implements Runnable {
         while (players.size() < 4){
             try {
                 logger.info("cant start {}. only {} players... waiting 5 sec", name, players.size());
+                logger.trace("waiting for players to register.");
                 Thread.sleep(5000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
-        logger.info("starting game: {}, with {} players.", name, players.size());
+        logger.warn("starting game: {}, with {} players.", name, players.size());
         Table table = new Table(players, connectionManager);
         // TODO: why player need to know his table, can be many
         for (Player player: players){

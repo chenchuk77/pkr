@@ -13,7 +13,7 @@ public class Bet {
     private Logger logger = LoggerFactory.getLogger(Bet.class);
 
     public Bet(int amount, Player player){
-        logger.warn("bet created for player {} with amount {}", player.getName(), amount);
+        logger.info("bet created for player {} with amount {}", player.getName(), amount);
         this.player=player;
         this.amount=amount;
 

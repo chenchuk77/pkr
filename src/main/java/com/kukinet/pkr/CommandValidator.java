@@ -40,17 +40,17 @@ public class CommandValidator {
 
     // loading the validator with valid options/ranges
     private void addOptions(){
-        logger.warn("::: adding fold option");
+        logger.info("::: adding fold option");
         addFoldOption();
         if (pot.bets.size() == 0){
-            logger.warn("::: adding check option, pot.bets.size()={}", pot.bets.size());
+            logger.info("::: adding check option, pot.bets.size()={}", pot.bets.size());
             addCheckOption();
             // min bet is bb or player chips, the lowest value
             int min_bet = table.getBigBlind();
             if (player.getChips() < min_bet){
                 min_bet = player.getChips();
             }
-            logger.warn("::: adding bet option, {}-{}", min_bet, player.getChips());
+            logger.info("::: adding bet option, {}-{}", min_bet, player.getChips());
             addBetOption(min_bet, player.getChips());
             addAllInOption(player.getChips());
         } else {
@@ -61,26 +61,26 @@ public class CommandValidator {
             // player doesnt have full calling chips
             if (player.getChips() < callValue){
                 callValue = player.getChips();
-                logger.warn("::: adding call option with {}", callValue);
+                logger.info("::: adding call option with {}", callValue);
                 addCallOption(callValue);
             // player has more chips than needed to call
             } else {
-                logger.warn("::: adding call option with {}", callValue);
+                logger.info("::: adding call option with {}", callValue);
                 addCallOption(callValue);
                 // min raise is bb or player chips, the lowest value
                 int min_raise = maxBet + table.getBigBlind();
                 if (player.getChips() < min_raise){
                     min_raise = player.getChips();
                 }
-                logger.warn("::: adding raise/allin options with {}-{}", min_raise, player.getChips());
+                logger.info("::: adding raise/allin options with {}-{}", min_raise, player.getChips());
                 addRaiseOption(min_raise, player.getChips());
                 addAllInOption(player.getChips());
             }
         }
         // in case few calls (preflop) there are few bets, in this case bb can check/raise, no call option
         if (table.isBigBlind(player) && table.getBettingRound().equals("preflop") && table.getBigBlind() == pot.getMaxBet()){
-            logger.warn("::: bb option: adding check option, removing call. pot.getMaxBet()={}", pot.getMaxBet());
-            logger.warn("::: pot_obj={}", pot.toString());
+            logger.info("::: bb option: adding check option, removing call. pot.getMaxBet()={}", pot.getMaxBet());
+            logger.info("::: pot_obj={}", pot.toString());
 
             addCheckOption();
             removeCallOption();
@@ -175,7 +175,7 @@ public class CommandValidator {
             }
         }
         // command is invalid, modify it to invalid/0 and return it
-        logger.warn("invalid command: {} amount: {}", cmd.getAction(), cmd.getAmount());
+        logger.info("invalid command: {} amount: {}", cmd.getAction(), cmd.getAmount());
         cmd.setAction("invalid");
         cmd.setAmount(0);
         return cmd;

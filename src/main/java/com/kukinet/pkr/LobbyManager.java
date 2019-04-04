@@ -38,7 +38,7 @@ public class LobbyManager {
     public void loginUser(User user) {
         loggedInUsers.add(user);
         logger.info("user {} logged-in.", user.getName());
-        logger.debug("total logged-in users: {}.", loggedInUsers.size());
+        logger.info("total logged-in users: {}.", loggedInUsers.size());
 
     }
 

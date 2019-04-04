@@ -254,24 +254,26 @@ public class Pot {
                 inHandPlayers.add(p);
             }
         }
-        logger.warn("split pot to {} player/s." , inHandPlayers.size());
+        logger.info("split pot to {} player/s." , inHandPlayers.size());
         // only 1 player take it all
         if (inHandPlayers.size() == 1){
             int winningChips = getAllBets();
             Player winner = inHandPlayers.get(0);
             chipShare.put(winner, winningChips);
-            logger.warn("chipshare for 1 player: {}." , showChipshare());
+//            logger.info("chipshare for 1 player: {}." , showChipshare());
+            logger.debug("winner: {}." , showChipshare());
             winner.setChips(winner.getChips() + winningChips);
             return chipShare;
         }
         // more than 1 player, empty bets
-        logger.warn("split {} bets to {} winners" , bets.size(), winners.size());
+        logger.info("split {} bets to {} winners" , bets.size(), winners.size());
 
         while (!bets.isEmpty()) {
             splitSingleBet();
         }
         // split main pot
-        logger.warn("split main pot of {} to players: {}." , mainPot, showWinners());
+//        logger.info("split main pot of {} to players: {}." , mainPot, showWinners());
+        logger.debug("winners: {}." , showChipshare());
 
         for (Player p: winners){
             // update player chipshare
@@ -282,8 +284,9 @@ public class Pot {
                 chipShare.put(p, mainPot/getNumOfWinners());
             }
         }
-        logger.warn("chipshare for many player: {}." , showChipshare());
-        // charge winners
+//        logger.info("chipshare for many player: {}." , showChipshare());
+        logger.debug("winners: {}." , showChipshare());
+// charge winners
         for (Player winner: chipShare.keySet()){
             winner.setChips(winner.getChips() + chipShare.get(winner));
         }
