@@ -1,4 +1,11 @@
 
+var foldButton;
+var checkButton;
+var betButton;
+var raiseButton;
+var callButton;
+
+
 function getCardSprite(cardCode) {
     for (var i = 0; i < cards_array.length; i++) {
         if (cards_array[i].code == cardCode) {
@@ -14,51 +21,76 @@ function getCardSprite(cardCode) {
 }
 
 function getBetButtonSprite(){
-    betButtonSprite = new Sprite(resources['images/buttons_120x40/button_bet.png'].texture);
-    // raiseButtonSprite.scale.x=0.1;
-    // raiseButtonSprite.scale.y=0.1;
+    var betButtonSprite = new Sprite(resources['images/buttons_120x40/button_bet.png'].texture);
+    betButtonSprite.interactive = true;
+    betButtonSprite.click = function() {
+        console.log("bet button clicked.");
+        sendAction("bet", optionAmouns["min_bet"]);
+    };
+    // betButtonSprite.scale.x=0.1;
+    // betButtonSprite.scale.y=0.1;
     return betButtonSprite;
 }
 function getRaiseButtonSprite(){
-    raiseButtonSprite = new Sprite(resources['images/buttons_120x40/button_raise.png'].texture);
+    var raiseButtonSprite = new Sprite(resources['images/buttons_120x40/button_raise.png'].texture);
+    raiseButtonSprite.interactive = true;
+    raiseButtonSprite.click = function() {
+        console.log("raise button clicked.");
+        sendAction("raise", optionAmouns["min_raise"]);
+    };
     // raiseButtonSprite.scale.x=0.1;
     // raiseButtonSprite.scale.y=0.1;
     return raiseButtonSprite;
 }
 
 function getCallButtonSprite(){
-    callButtonSprite = new Sprite(resources['images/buttons_120x40/button_call.png'].texture);
+    var callButtonSprite = new Sprite(resources['images/buttons_120x40/button_call.png'].texture);
+    callButtonSprite.interactive = true;
+    callButtonSprite.click = function() {
+        console.log("call button clicked.");
+        sendAction("call", optionAmouns["call"])
+    };
     // callButtonSprite.scale.x=0.1;
     // callButtonSprite.scale.y=0.1;
     return callButtonSprite;
 }
+
 function getFoldButtonSprite(){
-    foldButtonSprite = new Sprite(resources['images/buttons_120x40/button_fold.png'].texture);
+    var foldButtonSprite = new Sprite(resources['images/buttons_120x40/button_fold.png'].texture);
+    foldButtonSprite.interactive = true;
+    //foldButtonSprite.on('click', sendAction("fold", 0));
+    foldButtonSprite.click = function() {
+        console.log("fold button clicked.");
+        sendAction("fold", 0)
+    };
     // callButtonSprite.scale.x=0.1;
     // callButtonSprite.scale.y=0.1;
     return foldButtonSprite;
 }
 function getCheckButtonSprite(){
-    checkButtonSprite = new Sprite(resources['images/buttons_120x40/button_check.png'].texture);
-    // callButtonSprite.scale.x=0.1;
-    // callButtonSprite.scale.y=0.1;
+    var checkButtonSprite = new Sprite(resources['images/buttons_120x40/button_check.png'].texture);
+    checkButtonSprite.interactive = true;
+    checkButtonSprite.click = function() {
+        console.log("check button clicked.");
+        sendAction("check", 0)
+    };
     return checkButtonSprite;
 }
 
 function getBbSprite() {
-    bbSprite = new Sprite(resources['images/other/bbButton.png'].texture);
+    var bbSprite = new Sprite(resources['images/other/bbButton.png'].texture);
     bbSprite.scale.x=0.1;
     bbSprite.scale.y=0.1;
     return bbSprite;
 }
 function getSbSprite() {
-    sbSprite = new Sprite(resources['images/other/sbButton.png'].texture);
+    var sbSprite = new Sprite(resources['images/other/sbButton.png'].texture);
     sbSprite.scale.x=0.1;
     sbSprite.scale.y=0.1;
     return sbSprite;
 }
 function getDealerSprite() {
-    dealerSprite = new Sprite(resources['images/other/dealerButton.png'].texture);
+    var dealerSprite = new Sprite(resources['images/other/dealerButton.png'].texture);
     dealerSprite.scale.x=0.1;
     dealerSprite.scale.y=0.1;
     return dealerSprite;
@@ -66,12 +98,19 @@ function getDealerSprite() {
 
 function drawTable(){
     console.log('drawTable() called.')
-    table = new Sprite(PIXI.loader.resources['images/other/poker_table.png'].texture);
+    var table = new Sprite(PIXI.loader.resources['images/other/poker_table.png'].texture);
     app.stage.addChild(table);
 }
 
 function updateTable(tableSprite){
     console.log('updateTable() called. // TODO //')
+    app.stage.removeChild(foldButton);
+    app.stage.removeChild(checkButton);
+    app.stage.removeChild(betButton);
+    app.stage.removeChild(raiseButton);
+    app.stage.removeChild(callButton);
+    console.log('buttons removed')
+
     // table = new Sprite(PIXI.loader.resources['images/other/poker_table.png'].texture);
     // table.
     // app.stage.addChild(table);
@@ -116,13 +155,13 @@ function drawPocketCards(seats){
 // }
 
 function drawFlop(code1, code2, code3){
-    card1 = getCardSprite(code1);
+    var card1 = getCardSprite(code1);
     card1.x=200;
     card1.y=200;
-    card2 = getCardSprite(code2);
+    var card2 = getCardSprite(code2);
     card2.x=255;
     card2.y=200;
-    card3 = getCardSprite(code3);
+    var card3 = getCardSprite(code3);
     card3.x=310;
     card3.y=200;
     app.stage.addChild(card1);
@@ -130,7 +169,7 @@ function drawFlop(code1, code2, code3){
     app.stage.addChild(card3);
 }
 function drawTurn(code){
-    turnCard = getCardSprite(code);
+    var turnCard = getCardSprite(code);
     turnCard.x=380;
     turnCard.y=200;
     app.stage.addChild(turnCard);
@@ -138,7 +177,7 @@ function drawTurn(code){
 }
 
 function drawRiver(code){
-    riverCard = getCardSprite(code);
+    var riverCard = getCardSprite(code);
     riverCard.x=450;
     riverCard.y=200;
     app.stage.addChild(riverCard);
@@ -147,30 +186,37 @@ function drawRiver(code){
 
 function drawActionButtons(){
     console.log('drawActionButtons() called.');
-    foldButton = getFoldButtonSprite();
-    foldButton.x= 100;
-    foldButton.y= 450;
 
-    callButton = getCallButtonSprite();
-    callButton.x= 250;
-    callButton.y= 450;
-    checkButton = getCheckButtonSprite();
-    checkButton .x= 250;
-    checkButton .y= 500;
-
-    betButton = getBetButtonSprite();
-    betButton.x= 400;
-    betButton.y= 450;
-    raiseButton = getRaiseButtonSprite();
-    raiseButton.x= 400;
-    raiseButton.y= 500;
-
-    app.stage.addChild(foldButton);
-    app.stage.addChild(callButton);
-    app.stage.addChild(checkButton);
-    app.stage.addChild(betButton);
-    app.stage.addChild(raiseButton);
-
+    if (options.includes("fold")){
+        foldButton = getFoldButtonSprite();
+        foldButton.x= 100;
+        foldButton.y= 450;
+        app.stage.addChild(foldButton);
+    }
+    if (options.includes("call")) {
+        callButton = getCallButtonSprite();
+        callButton.x = 250;
+        callButton.y = 450;
+        app.stage.addChild(callButton);
+    }
+    if (options.includes("check")) {
+        checkButton = getCheckButtonSprite();
+        checkButton.x = 250;
+        checkButton.y = 500;
+        app.stage.addChild(checkButton);
+    }
+    if (options.includes("bet")) {
+        betButton = getBetButtonSprite();
+        betButton.x = 400;
+        betButton.y = 450;
+        app.stage.addChild(betButton);
+    }
+    if (options.includes("raise")) {
+        raiseButton = getRaiseButtonSprite();
+        raiseButton.x = 400;
+        raiseButton.y = 500;
+        app.stage.addChild(raiseButton);
+    }
 
 }
 

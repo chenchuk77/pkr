@@ -1,5 +1,12 @@
 #!/bin/bash
 
+echo "run ddd from js client"
+echo "after ddd:1234 login from js, the game will start automatically"
+sleep 10m
+exit 99
+#### REMOVE THE ABOVE TO RUN DDD AS CONSOLE CLIENT ###
+
+
 PROJECT_FOLDER="${HOME}/dev/pkr"
 sleep 1s
 

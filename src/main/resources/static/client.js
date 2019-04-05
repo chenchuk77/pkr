@@ -12,6 +12,8 @@ var pocketCards;
 var communityCards;
 var bets;
 var buttons;
+var options;
+var optionAmouns;
 
 var connection = new WebSocket('ws://192.168.2.39:4444');
 
@@ -68,6 +70,12 @@ connection.onmessage = function (e) {
         // server waits for us
         if (player.name === commandJSON.player){
             console.log("server is waiting for our command.");
+            console.log("updating ctx options/amounts.");
+            options = commandJSON.options;
+            optionAmouns = commandJSON.optionAmounts;
+
+
+
             drawActionButtons();
         } else {
             console.log("its " + commandJSON.player + "'s turn.");
@@ -158,11 +166,20 @@ var call = function(){
 };
 
 // use this to send commands (will be replaced by action buttons when implemented)
-var sendAction = function (cmd, amount){
+function sendAction(cmd, amount){
+
+    console.log(cmd);
+    console.log(amount);
+    console.log("cmd:" + cmd + ", amount: " + amount);
+    //console.log("cmd:" + cmd.type() + ", amount: " + amount.type());
+
     // if (str.contains(',')) {
     //cmd = str.split(',')[0];
    // amount = parseInt(str.split(',')[1]);
     actionCommand = {"action": cmd, "amount": amount};
+    console.log(actionCommand);
+
+
     console.log("sending command: " + actionCommand);
     connection.send(JSON.stringify(actionCommand));
 
@@ -170,7 +187,7 @@ var sendAction = function (cmd, amount){
     //     console.log("unsupported... use full commands. ie: call,50 or fold,0 ")
     // }
 
-};
+}
 
 //////////////// PIXI APPLICATION ///////////////////
 
