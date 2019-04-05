@@ -18,40 +18,36 @@ import java.util.concurrent.TimeUnit;
 
 public class ConsoleClient extends WebSocketClient implements PlayerStrategy {
 
-    private Map<Integer, PlayerDto> table;
-    private Map<String, Integer> buttons;
-    private Map<String, Integer> bets;
-    private int pot;
-    private PlayerDto player;
-    private int seat;
-    private List<String> communityCards;
+    protected String username;
+    protected Map<Integer, PlayerDto> table;
+    protected Map<String, Integer> buttons;
+    protected Map<String, Integer> bets;
+    protected int pot;
+    protected PlayerDto player;
+    protected int seat;
+    protected List<String> communityCards;
 
     // for drawing client action buttons
-    private List<String> validOptions;
-    private Map<String, Integer> optionAmounts;
+    protected List<String> validOptions;
+    protected Map<String, Integer> optionAmounts;
 
-    //    private int nextPlayerSeat;
-    private int activePlayerIndex;
-    private String statusMessage;
-//    private Map<String, Integer> bets;
+    //    protected int nextPlayerSeat;
+    protected int activePlayerIndex;
+    protected String statusMessage;
 
-
-//    ConsoleClient c = new ConsoleClient( new URI( "ws://localhost:4444" )); // more about drafts here: http://github.com/TooTallNate/Java-WebSocket/wiki/Drafts
-
-
-//    public ConsoleClient( URI serverUri , Draft draft ) {
-//        super( serverUri, draft );
-//    }
-//    public ConsoleClient( URI serverUri, Map<String, String> httpHeaders ) {
-//        super(serverUri, httpHeaders);
-//    }
-    private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
+    protected final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
 
     public ConsoleClient(URI serverURI) {
         super( serverURI );
         initHand();
     }
-    private void initHand(){
+
+    public ConsoleClient(URI serverURI, String username) {
+        super(serverURI);
+        this.username = username;
+    }
+
+    protected void initHand(){
         System.out.println("init client for a new hand.");
         // table will be refreshed after every "new hand"
         player = null;
@@ -64,12 +60,7 @@ public class ConsoleClient extends WebSocketClient implements PlayerStrategy {
         statusMessage = "";
     }
 
-//    private void nextPlayer(){
-//
-//    }
-
-
-    private Integer getPlayerSeatByName(String name){
+    protected Integer getPlayerSeatByName(String name){
         for (Map.Entry<Integer, PlayerDto> entry: table.entrySet()){
             if (entry.getValue().getName().equals(name)){
                 return entry.getKey();
@@ -78,8 +69,7 @@ public class ConsoleClient extends WebSocketClient implements PlayerStrategy {
         return null;
     }
 
-
-    private PlayerDto getPlayerDtoByName(String name){
+    protected PlayerDto getPlayerDtoByName(String name){
         for (Map.Entry<Integer, PlayerDto> entry: table.entrySet()){
             if (entry.getValue().getName().equals(name)){
                 return table.get(entry.getKey());
@@ -96,7 +86,8 @@ public class ConsoleClient extends WebSocketClient implements PlayerStrategy {
             //String playerName = playerJSON.get("name").getAsString();
             PlayerDto jsonPlayer = new PlayerDto(playerJSON);
             // if me
-            if (jsonPlayer.getName().equals(USERNAME)){
+            //System.out.println("USERNAME=" + username);
+            if (jsonPlayer.getName().equals(username)){
                 // set ctx player if not exists
                 if (player == null){
                     player = jsonPlayer;
@@ -116,23 +107,10 @@ public class ConsoleClient extends WebSocketClient implements PlayerStrategy {
         }
     }
 
-
-//    public void parseBetsJSON(JsonObject betsJSON) {
-//
-//        JsonObject betsJSON = betsJSON.getAsJsonObject(String.valueOf(i));
-//        //String playerName = playerJSON.get("name").getAsString();
-//        PlayerDto jsonPlayer = new PlayerDto(playerJSON);
-//    }
-
     @Override
     public void onOpen( ServerHandshake handshakedata ) {
         send("hello from java client.");
         System.out.println( "client connected." );
-        // if you plan to refuse connection based on ip or httpfields overload: onWebsocketHandshakeReceivedAsClient
-
-        //executorService.scheduleAtFixedRate(()->{
-        //    send("ping");
-        //}, 5, 5, TimeUnit.SECONDS);
     }
 
     @Override
@@ -152,10 +130,6 @@ public class ConsoleClient extends WebSocketClient implements PlayerStrategy {
             bets.put("sb", betsJSON.get("sb").getAsInt());
             bets.put("bb", betsJSON.get("bb").getAsInt());
             System.out.println( "ctx bets updated." );
-//            player.setStrHole2(betsJSON.get("card2").getAsString());
-//            System.out.println( "parsed as bets update." );
-//            JsonObject jsonMessage = new Gson().fromJson(status, JsonObject.class);
-//            bets = Utils.parseBetsJSON(jsonMessage);
             drawTable();
         }
         // buttons update JSON
@@ -165,14 +139,10 @@ public class ConsoleClient extends WebSocketClient implements PlayerStrategy {
             buttons.put("bbPosition", buttonsJSON.get("bbPosition").getAsInt());
             buttons.put("dealerPosition", buttonsJSON.get("dealerPosition").getAsInt());
             System.out.println( "ctx buttons updated." );
-//            JsonObject jsonMessage = new Gson().fromJson(status, JsonObject.class);
-//            buttons = Utils.parseButtonsJSON(jsonMessage);
             drawTable();
         }
         // update ctx player with my hole cards
         if (message.contains("cards")){
-//            System.out.println( "got cards. player.getStrHole1()=" +player.getStrHole1() );
-//            System.out.println( "got cards. player.getStrHole2()=" +player.getStrHole2() );
             JsonObject cardsJSON = new Gson().fromJson(message, JsonObject.class);
             player.setStrHole1(cardsJSON.get("card1").getAsString());
             player.setStrHole2(cardsJSON.get("card2").getAsString());
@@ -269,10 +239,6 @@ public class ConsoleClient extends WebSocketClient implements PlayerStrategy {
                 JsonElement optionsAmountsJSON = jsonMessage.get("optionAmounts");
                 Type mapType = new TypeToken<Map<String, Integer>>() {}.getType();
                 optionAmounts = new Gson().fromJson(optionsAmountsJSON, mapType);
-
-//                System.out.println("valid commands: " + validOptions.toString());
-//                System.out.println("valid amounts: " + optionAmounts.toString());
-
                 play();
             }
         }
@@ -282,20 +248,12 @@ public class ConsoleClient extends WebSocketClient implements PlayerStrategy {
             JsonObject statusJSON = new Gson().fromJson(message, JsonObject.class);
             statusMessage = statusJSON.get("value").getAsString();
             setStatusMessage(statusMessage);
-//            drawTable();
-
         }
 
 
         // update ctx player with my hole cards
         if (message.contains("new hand")){
             System.out.println( "starting a new hand");
-//            System.out.println( "got cards. player.getStrHole2()=" +player.getStrHole2() );
-//            JsonObject cardsJSON = new Gson().fromJson(status, JsonObject.class);
-//            player.setStrHole1(cardsJSON.get("card1").getAsString());
-//            player.setStrHole2(cardsJSON.get("card2").getAsString());
-//            System.out.println( "ctx cards updated." );
-//            drawTable();
             initHand();
         }
 
@@ -303,7 +261,6 @@ public class ConsoleClient extends WebSocketClient implements PlayerStrategy {
 
     @Override
     public void onClose( int code, String reason, boolean remote ) {
-        // The codecodes are documented in class org.java_websocket.framing.CloseFrame
         System.out.println( "Connection closed by " + ( remote ? "remote peer" : "us" ) + " Code: " + code + " Reason: " + reason );
     }
 
@@ -312,10 +269,6 @@ public class ConsoleClient extends WebSocketClient implements PlayerStrategy {
         ex.printStackTrace();
         // if the error is fatal then onClose will be called additionally
     }
-
-
-
-//    received: {"type":"waitaction","player":"fff","options":["fold","call","raise","allin"],"optionAmounts":{"call":60,"max_raise":10000,"min_raise":0,"allin":10000}}
 
     @Override
     public void play(){
@@ -361,27 +314,21 @@ public class ConsoleClient extends WebSocketClient implements PlayerStrategy {
             System.out.println("unknown command, assume hacking.");
             actionJSON.addProperty("action", action);
             actionJSON.addProperty("amount", amount);
-
-//            String action  = userAction.split(",")[0];
-//            String amount = userAction.split(",")[1];
-//            actionJSON.addProperty("action", action);
-//            actionJSON.addProperty("amount", Integer.valueOf(amount));
         }
         send(actionJSON.toString());
     }
 
 
-    private void clearScreen(){
+    protected void clearScreen(){
         //System.out.print(ConsoleColors.CLS);
         //System.out.print("\033\143");
         for (int i=0; i<24; i++){
             System.out.println();
         }
-
 //                    System.out.println("##########################  TODO: CLEAR SCREEN  ################################");
     }
 
-    private void drawTable(){
+    protected void drawTable(){
         // exit if no table yet
 //        if (table == null) return;
 //        if (table.get(0) == null) return;
@@ -419,16 +366,6 @@ public class ConsoleClient extends WebSocketClient implements PlayerStrategy {
         }
         System.out.println();
 
-
-//        private String drawCards(){
-//            // if me
-//            if (seat == activePlayerIndex){
-//                return "" + suitedCard(player.getStrHole1()) + " " + suitedCard(player.getStrHole2());
-//            }
-//            return;
-//        }
-
-
         // print community cards
         if (!communityCards.isEmpty()){
 //            System.out.println("----- community cards: " + communityCards.size());
@@ -444,18 +381,6 @@ public class ConsoleClient extends WebSocketClient implements PlayerStrategy {
             }
 
             System.out.println(ConsoleColors.PURPLE_BOLD + "flop : " + ccards + ConsoleColors.RESET);
-
-//            String turn = (communityCards.size()>3)
-//            String flop1 = communityCards.get(0);
-//            String flop1 = communityCards.get(0);
-
-
-//            System.out.println(ConsoleColors.PURPLE_BOLD + "FLOP: " +
-//                    suitedCard(communityCards.get(0)) + "  " +
-//                    suitedCard(communityCards.get(1)) + "  " +
-//                    suitedCard(communityCards.get(2)) + "     " +
-//                    (communityCards.size()>3) ? suitedCard(communityCards.get(3)) : "" + "     " +
-//                    suitedCard(communityCards.get(4)) + ConsoleColors.RESET) ;
         }
 
         System.out.println(ConsoleColors.YELLOW_BOLD + "pot  : " + pot + ConsoleColors.RESET);
@@ -465,21 +390,16 @@ public class ConsoleClient extends WebSocketClient implements PlayerStrategy {
         System.out.println(ConsoleColors.RESET);
         System.out.println();
 
-//        System.out.println( "got cards. player.getStrHole1()=" +player.getStrHole1() );
-//        System.out.println( "got cards. player.getStrHole2()=" +player.getStrHole2() );
-
-
-
     }
 
-    private static final String SUIT_SPADE = "\u2660";
-    private static final String SUIT_CLUB = "\u2663";
-    private static final String SUIT_HEART = "\u2665";
-    private static final String SUIT_DIAMOND = "\u2666";
-    //private static final String CARD_BACK = "\U1f0a0";
+    protected static final String SUIT_SPADE = "\u2660";
+    protected static final String SUIT_CLUB = "\u2663";
+    protected static final String SUIT_HEART = "\u2665";
+    protected static final String SUIT_DIAMOND = "\u2666";
+    //protected static final String CARD_BACK = "\U1f0a0";
 
 
-//    private String cardsOfS
+//    protected String cardsOfS
 
     public String suitedCard(String textCard){
         if (textCard.endsWith("s")){
@@ -506,7 +426,7 @@ public class ConsoleClient extends WebSocketClient implements PlayerStrategy {
     }
 
 
-    private String drawButtons(int seatIndex) {
+    protected String drawButtons(int seatIndex) {
 //        System.out.println("---------- drawButtons called for seat: " + seatIndex);
 
         if (buttons == null) {
@@ -530,68 +450,42 @@ public class ConsoleClient extends WebSocketClient implements PlayerStrategy {
         return "    ";
     }
 
-    private void setStatusMessage(String message){
+    protected void setStatusMessage(String message){
         statusMessage = message;
         drawTable();
     }
 
-//
-//        //if (seatIndex ==
-//
-//        // game start
-//        if (buttons == null){
-//            return "    ";
-//        }
-//        if (buttons.get("sbPosition")== null){
-//            return "    ";
-//        }
-//
-//        if (buttons.get("sbPosition").equals(i)){
-//            return "[SB]";
-//        }
-//        if (buttons.get("bbPosition").equals(i)){
-//            return "[BB]";
-//        }
-//        if (buttons.get("dealerPosition").equals(i)){
-//            return "[DL]";
-//        }
-//        return "----";
-//    }
 
     // global. used by client to recognize whoami
-    public static String USERNAME;
+//    zzzzzzzzzzzzzzpublic static String USERNAME;
 
-    public static void main( String[] args ) throws URISyntaxException {
-        String command  = args[0].split(",")[0];
-//        String username = args[0].split(",")[1];
-        USERNAME = args[0].split(",")[1];
-
-        String password = args[0].split(",")[2];
-        String gameName = args[0].split(",")[3];
-
-        ConsoleClient c = new ConsoleClient( new URI( "ws://localhost:4444" )); // more about drafts here: http://github.com/TooTallNate/Java-WebSocket/wiki/Drafts
-        c.setConnectionLostTimeout(0);
-        c.connect();
-
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        c.send("login" + "," + USERNAME + "," + password);
-
-        // register to testgame if 'testGame' keyword specified
-        if (gameName.equals("testGame")){
-            c.send("register" + "," + USERNAME + ",testGame");
-
-        }
-        if (gameName.equals("noop")){
-            c.send("statusrequest");
-        }
-
-//        if (args[0].split(",").length==4 ){
-//            String gamename = args[0].split(",")[3];
-//            c.send("start-game" + "," + gamename);
+//    public static void main( String[] args ) throws URISyntaxException {
+//        String command  = args[0].split(",")[0];
+////        String username = args[0].split(",")[1];
+//        USERNAME = args[0].split(",")[1];
+//
+//        String password = args[0].split(",")[2];
+//        String gameName = args[0].split(",")[3];
+//
+//        ConsoleClient c = new ConsoleClient( new URI( "ws://localhost:4444" )); // more about drafts here: http://github.com/TooTallNate/Java-WebSocket/wiki/Drafts
+//        c.setConnectionLostTimeout(0);
+//        c.connect();
+//
+//        try {
+//            Thread.sleep(1000);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
 //        }
-    }
+//        c.send("login" + "," + USERNAME + "," + password);
+//
+//        // register to testgame if 'testGame' keyword specified
+//        if (gameName.equals("testGame")){
+//            c.send("register" + "," + USERNAME + ",testGame");
+//
+//        }
+//        if (gameName.equals("noop")){
+//            c.send("statusrequest");
+//        }
+//
+//    }
 }
