@@ -157,6 +157,11 @@ imageFiles.push('images/buttons_120x40/button_call.png');
 imageFiles.push('images/buttons_120x40/button_check.png');
 imageFiles.push('images/buttons_120x40/button_fold.png');
 imageFiles.push('images/buttons_120x40/button_raise.png');
+imageFiles.push('images/avatars/human1t.png');
+imageFiles.push('images/avatars/human2t.png');
+imageFiles.push('images/avatars/human3.jpeg');
+imageFiles.push('images/avatars/human4.jpeg');
+imageFiles.push('images/avatars/girl1.jpeg');
 
 // TODO: remove, this for testing only
 //var players=['ddd','eee','fff','iii-starter'];

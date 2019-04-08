@@ -14,6 +14,7 @@ var bets;
 var buttons;
 var options;
 var optionAmouns;
+var statusMessage;
 
 var connection = new WebSocket('ws://192.168.2.39:4444');
 
@@ -48,6 +49,21 @@ connection.onmessage = function (e) {
         player.cards=[pocketCards.card1, pocketCards.card2];
         drawPocketCards(seats);
     }
+    if (e.data.includes('status')) {
+        statusMessage = JSON.parse(e.data);
+        console.log('status message received.');
+        drawStatusMessage(statusMessage);
+    }
+
+    // if (message.contains("status")) {
+    //     System.out.println("status update received.");
+    //     JsonObject statusJSON = new Gson().fromJson(message, JsonObject.class);
+    //     statusMessage = statusJSON.get("value").getAsString();
+    //     setStatusMessage(statusMessage);
+    // }
+
+
+
     if (e.data.includes('community')) {
         communityCards = JSON.parse(e.data);
         console.log('communityCards update received.');

@@ -4,6 +4,33 @@ var checkButton;
 var betButton;
 var raiseButton;
 var callButton;
+var statusMessage;
+
+function setStausMessageSprite(message){
+    // function getStausMessageSprite(message){
+    var style = {
+        // font: 'bold italic 36px Arial'
+        font: 'bold 24px Arial',
+        fill: '#F7EDCA',
+        stroke: '#4a1850',
+        strokeThickness: 5,
+        dropShadow: true,
+        dropShadowColor: '#000000',
+        dropShadowAngle: Math.PI / 6,
+        dropShadowDistance: 6//,
+        //wordWrap: true,
+        //wordWrapWidth: 440,
+
+    };
+
+    statusMessage = new PIXI.Text(message.value, style);
+    //var statusMessage = new PIXI.Text(message.value, style);
+    statusMessage.x = 10;
+    statusMessage.y = 550;
+
+    //return statusMessage;
+
+}
 
 
 function getCardSprite(cardCode) {
@@ -12,8 +39,8 @@ function getCardSprite(cardCode) {
             cardSprite = new Sprite(resources[cards_array[i].file].texture);
             // cardSprite.scale.x=0.1;
             // cardSprite.scale.y=0.1;
-            cardSprite.scale.x=0.25;
-            cardSprite.scale.y=0.25;
+            //cardSprite.scale.x=0.25;
+            //cardSprite.scale.y=0.25;
             return cardSprite;
         }
     }
@@ -258,4 +285,43 @@ function drawCards(code1, code2, seat_id){
     card2.y=location.y+10;
     app.stage.addChild(card1);
     app.stage.addChild(card2);
+}
+
+// drawing status message (update message)
+function drawStatusMessage(message) {
+    console.log('drawStatusMessage() called. with message: ' + message);
+    //statusMessage.text = message;
+    //app.stage.removeChild(statusMessage);
+    // app.renderer.render(app.stage);
+    // statusMessage.destroy();
+    //if app.stage.contains()
+
+    //statusMessage = getStausMessageSprite(message);
+    setStausMessageSprite(message);
+    console.log(statusMessage);
+    console.log(typeof(statusMessage));
+    console.log(statusMessage.isSprite);
+
+    console.log("********STATUS MESSAGE = " + statusMessage);
+    app.stage.addChild(statusMessage);
+    // app.renderer.render(app.stage);
+
+    // var style = {
+    //     font: 'bold italic 36px Arial',
+    //     fill: '#F7EDCA',
+    //     stroke: '#4a1850',
+    //     strokeThickness: 5,
+    //     dropShadow: true,
+    //     dropShadowColor: '#000000',
+    //     dropShadowAngle: Math.PI / 6,
+    //     dropShadowDistance: 6,
+    //     wordWrap: true,
+    //     wordWrapWidth: 440
+    // };
+    //
+    // statusMessage = new PIXI.Text(message.value, style);
+    // statusMessage.x = 30;
+    // statusMessage.y = 180;
+    //
+
 }

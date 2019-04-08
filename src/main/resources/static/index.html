@@ -7,7 +7,8 @@
         <script src="pixi.min.js"></script>
         <script src="data.js"></script>
         <script src="pixi-functions.js"></script>
-        <script src="client.js"></script>
+        <!--<script src="client.js"></script>-->
+        <script src="client-dev.js"></script>
         <!--<script src="pixi-slider.js"></script>-->
     </head>
 
@@ -16,10 +17,12 @@
 
     <div id="loggedOut">
         <label>Username</label>
-        <input id="username" type="text" placeholder="Enter Username" name="uname" required>
+        <!--<input id="username" type="text" placeholder="Enter Username" name="uname" required>-->
+        <input id="username" type="text" value="ddd" name="uname" required>
 
         <label>Password</label>
-        <input id="password" type="password" placeholder="Enter Password" name="psw" required>
+        <!--<input id="password" type="password" placeholder="Enter Password" name="psw" required>-->
+        <input id="password" type="password" value="1234" name="psw" required>
 
         <button onclick="login();">Login</button>
     </div>
