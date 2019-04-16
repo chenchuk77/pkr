@@ -162,6 +162,25 @@ imageFiles.push('images/avatars/human2t.png');
 imageFiles.push('images/avatars/human3.jpeg');
 imageFiles.push('images/avatars/human4.jpeg');
 imageFiles.push('images/avatars/girl1.jpeg');
+imageFiles.push('images/chips/chip1_stack.png');
+imageFiles.push('images/chips/chip1_top.png');
+imageFiles.push('images/chips/chip5_stack.png');
+imageFiles.push('images/chips/chip5_top.png');
+imageFiles.push('images/chips/chip25_stack.png');
+imageFiles.push('images/chips/chip25_top.png');
+imageFiles.push('images/chips/chip100_stack.png');
+imageFiles.push('images/chips/chip100_top.png');
+imageFiles.push('images/chips/chip500_stack.png');
+imageFiles.push('images/chips/chip500_top.png');
+imageFiles.push('images/chips/chip1000_stack.png');
+imageFiles.push('images/chips/chip1000_top.png');
+imageFiles.push('images/chips/chip5000_stack.png');
+imageFiles.push('images/chips/chip5000_top.png');
+imageFiles.push('images/chips/chip25000_stack.png');
+imageFiles.push('images/chips/chip25000_top.png');
+
+
+
 
 // TODO: remove, this for testing only
 //var players=['ddd','eee','fff','iii-starter'];
