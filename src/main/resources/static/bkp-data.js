@@ -1,7 +1,3 @@
-/*
-* Constants to be use by all project
-* */
-
 // constants
 let pocketCardPosition =[
     {x: 100, y:250},
@@ -29,36 +25,13 @@ let actionButtonsPosition =[
     {x: 650, y:600}
 ];
 
-const BUTTONS = {
-    abc:   {x: 200, y: 500},
-    fold:  {x: 0, y: 0},
-    check: {x: 150, y: 0},
-    call:  {x: 0, y: 50},
-    bet:   {x: 150, y: 50},
-    raise: {x: 150, y: 50}
-};
-
-// dealer container positions ( for cards, deck, pot )
-const TABLE = {
-    cards:      {scale: 0.3},
-    ccc:        {x: 200, y: 150},
-    deck:       {x: 180, y: 130},
-    flop1:      {x: 100, y: 0},
-    flop2:      {x: 200, y: 0},
-    flop3:      {x: 300, y: 0},
-    turn:       {x: 450, y: 0},
-    river:      {x: 600, y: 0},
-    pot:        {x: 160, y: 180}
-};
-
 // positions inside containers
 const POS = {
     0: {class: "bottom-player",
-        bet:        {x: 0, y: -32},
         ac:         {x: 0, y: 0},
         midrect:    {x: 0, y: 32},
         ncc:        {x: 0, y: 64},
-        position:   {x: 350, y: 350},
+        position:   {x: 350, y: 300},
         size:       {x: 80, y:40},
         name:       {x: 0, y:40},
         chips:      {x: 0, y:60},
@@ -66,7 +39,6 @@ const POS = {
         avatar_cards:    {x: 1, y:1},
         committed: {x: 1, y:1}},
     1: {class: "bottom-player",
-        bet:        {x: 0, y: -32},
         ac:         {x: 0, y: 0},
         midrect:    {x: 0, y: 32},
         ncc:        {x: 0, y: 64},
@@ -78,10 +50,9 @@ const POS = {
         avatar_cards:    {x: 100, y:500},
         committed: {x: 1, y:1}},
     2: {class: "left-player",
-        bet:        {x: 32, y: 0},
-        ac:         {x: 0, y: 0},
-        midrect:    {x: -32, y: 0},
-        ncc:        {x: -64, y: 0},
+        ac:         {x: 64, y: 0},
+        midrect:    {x: 32, y: 0},
+        ncc:        {x: 0, y: 0},
         position:   {x: 50, y: 200},
         size:       {x: 80, y:40},
         name:       {x: 0, y:0},
@@ -90,10 +61,9 @@ const POS = {
         avatar_cards:    {x: 50, y:50},
         committed: {x: 100, y:0}},
     3: {class: "top-player",
-        bet:        {x: 0, y: 32},
-        ac:         {x: 0, y: 0},
-        midrect:    {x: 0, y: -32},
-        ncc:        {x: 0, y: -64},
+        ac:         {x: 0, y: 64},
+        midrect:    {x: 0, y: 32},
+        ncc:        {x: 0, y: 0},
         position:   {x: 200, y: 50},
         size:       {x: 40, y:80},
         name:       {x: 0, y:0},
@@ -102,10 +72,9 @@ const POS = {
         avatar_cards:    {x: 1, y:1},
         committed: {x: 1, y:1}},
     4: {class: "top-player",
-        bet:        {x: 0, y: 32},
-        ac:         {x: 0, y: 0},
-        midrect:    {x: 0, y: -32},
-        ncc:        {x: 0, y: -64},
+        ac:         {x: 0, y: 64},
+        midrect:    {x: 0, y: 32},
+        ncc:        {x: 0, y: 0},
         position:   {x: 300, y: 50},
         size:       {x: 40, y:80},
         name:       {x: 0, y:0},
@@ -114,10 +83,9 @@ const POS = {
         avatar_cards:    {x: 1, y:1},
         committed: {x: 1, y:1}},
     5: {class: "top-player",
-        bet:        {x: 0, y: 32},
-        ac:         {x: 0, y: 0},
-        midrect:    {x: 0, y: -32},
-        ncc:        {x: 0, y: -64},
+        ac:         {x: 0, y: 64},
+        midrect:    {x: 0, y: 32},
+        ncc:        {x: 0, y: 0},
         position:   {x: 400, y: 50},
         size:       {x: 40, y:80},
         name:       {x: 0, y:0},
@@ -126,10 +94,9 @@ const POS = {
         avatar_cards:    {x: 1, y:1},
         committed: {x: 1, y:1}},
     6: {class: "top-player",
-        bet:        {x: 0, y: 32},
-        ac:         {x: 0, y: 0},
-        midrect:    {x: 0, y: -32},
-        ncc:        {x: 0, y: -64},
+        ac:         {x: 0, y: 64},
+        midrect:    {x: 0, y: 32},
+        ncc:        {x: 0, y: 0},
         position:   {x: 500, y: 50},
         size:       {x: 40, y:80},
         name:       {x: 0, y:0},
@@ -138,7 +105,6 @@ const POS = {
         avatar_cards:    {x: 1, y:1},
         committed: {x: 1, y:1}},
     7: {class: "right-player",
-        bet:        {x: -32, y: 0},
         ac:         {x: 0, y: 0},
         midrect:    {x: 32, y: 0},
         ncc:        {x: 64, y: 0},
@@ -150,7 +116,6 @@ const POS = {
         avatar_cards:    {x: 1, y:1},
         committed: {x: 1, y:1}},
     8: {class: "bottom-player",
-        bet:        {x: 0, y: -32},
         ac:         {x: 0, y: 0},
         midrect:    {x: 0, y: 32},
         ncc:        {x: 0, y: 64},
@@ -223,6 +188,67 @@ let cards_array = [
     { code: 'Qs', file: 'images/cards/Qs.svg'},
     { code: '00', file: 'images/cards/back.svg'}
 ];
+
+//
+// let cards_array = [
+//     { code: 'Tc', file: 'images/cards/10_of_clubs.png'},
+//     { code: 'Td', file: 'images/cards/10_of_diamonds.png'},
+//     { code: 'Th', file: 'images/cards/10_of_hearts.png'},
+//     { code: 'Ts', file: 'images/cards/10_of_spades.png'},
+//     { code: '2c', file: 'images/cards/2_of_clubs.png'},
+//     { code: '2d', file: 'images/cards/2_of_diamonds.png'},
+//     { code: '2h', file: 'images/cards/2_of_hearts.png'},
+//     { code: '2s', file: 'images/cards/2_of_spades.png'},
+//     { code: '3c', file: 'images/cards/3_of_clubs.png'},
+//     { code: '3d', file: 'images/cards/3_of_diamonds.png'},
+//     { code: '3h', file: 'images/cards/3_of_hearts.png'},
+//     { code: '3s', file: 'images/cards/3_of_spades.png'},
+//     { code: '4c', file: 'images/cards/4_of_clubs.png'},
+//     { code: '4d', file: 'images/cards/4_of_diamonds.png'},
+//     { code: '4h', file: 'images/cards/4_of_hearts.png'},
+//     { code: '4s', file: 'images/cards/4_of_spades.png'},
+//     { code: '5c', file: 'images/cards/5_of_clubs.png'},
+//     { code: '5d', file: 'images/cards/5_of_diamonds.png'},
+//     { code: '5h', file: 'images/cards/5_of_hearts.png'},
+//     { code: '5s', file: 'images/cards/5_of_spades.png'},
+//     { code: '6c', file: 'images/cards/6_of_clubs.png'},
+//     { code: '6d', file: 'images/cards/6_of_diamonds.png'},
+//     { code: '6h', file: 'images/cards/6_of_hearts.png'},
+//     { code: '6s', file: 'images/cards/6_of_spades.png'},
+//     { code: '7c', file: 'images/cards/7_of_clubs.png'},
+//     { code: '7d', file: 'images/cards/7_of_diamonds.png'},
+//     { code: '7h', file: 'images/cards/7_of_hearts.png'},
+//     { code: '7s', file: 'images/cards/7_of_spades.png'},
+//     { code: '8c', file: 'images/cards/8_of_clubs.png'},
+//     { code: '8d', file: 'images/cards/8_of_diamonds.png'},
+//     { code: '8h', file: 'images/cards/8_of_hearts.png'},
+//     { code: '8s', file: 'images/cards/8_of_spades.png'},
+//     { code: '9c', file: 'images/cards/9_of_clubs.png'},
+//     { code: '9d', file: 'images/cards/9_of_diamonds.png'},
+//     { code: '9h', file: 'images/cards/9_of_hearts.png'},
+//     { code: '9s', file: 'images/cards/9_of_spades.png'},
+//     { code: 'Ac', file: 'images/cards/ace_of_clubs.png'},
+//     { code: 'Ad', file: 'images/cards/ace_of_diamonds.png'},
+//     { code: 'Ah', file: 'images/cards/ace_of_hearts.png'},
+//     { code: 'As', file: 'images/cards/ace_of_spades.png'},
+//     { code: 'Jc', file: 'images/cards/jack_of_clubs.png'},
+//     { code: 'Jd', file: 'images/cards/jack_of_diamonds.png'},
+//     { code: 'Jh', file: 'images/cards/jack_of_hearts.png'},
+//     { code: 'Js', file: 'images/cards/jack_of_spades.png'},
+//     { code: 'Kc', file: 'images/cards/king_of_clubs.png'},
+//     { code: 'Kd', file: 'images/cards/king_of_diamonds.png'},
+//     { code: 'Kh', file: 'images/cards/king_of_hearts.png'},
+//     { code: 'Ks', file: 'images/cards/king_of_spades.png'},
+//     { code: 'Qc', file: 'images/cards/queen_of_clubs.png'},
+//     { code: 'Qd', file: 'images/cards/queen_of_diamonds.png'},
+//     { code: 'Qh', file: 'images/cards/queen_of_hearts.png'},
+//     { code: 'Qs', file: 'images/cards/queen_of_spades.png'},
+//     { code: '00', file: 'images/other/back.png'}
+// ];
+
+
+
+
 
 // for PIXI loader, to load all images
 let imageFiles = [];

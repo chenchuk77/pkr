@@ -38,10 +38,10 @@ connection.onmessage = function (e) {
         console.log('buttons update received.');
         drawButtons(buttons);
     }
-    if (e.data.includes('chips')) { // TODO !!! split to 2 messages (playermove / table)
+    if (e.data.includes('chips') && !e.data.includes('playermove')) { // TODO !!! split to 2 messages (playermove / table)
         seats = JSON.parse(e.data);
-        console.log('seats update received.');
-        updateTable();
+        console.log('full seats update received.');
+        updateTable(e.data);
     }
     if (e.data.includes('card1')) {
         pocketCards = JSON.parse(e.data);

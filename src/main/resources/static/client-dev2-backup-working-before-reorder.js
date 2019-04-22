@@ -9,14 +9,14 @@ $( document ).ready(function() {
 });
 
 
-var seats;
-var pocketCards;
-var communityCards;
-var bets;
-var buttons;
-var options;
-var optionAmouns;
-var statusMessage;
+let seats = [];
+let pocketCards;
+let communityCards;
+let bets;
+let buttons;
+let options;
+let optionAmouns;
+//let statusMessage;
 
 //var connection = new WebSocket('ws://192.168.2.39:4444');
 
@@ -106,9 +106,9 @@ var statusMessage;
 // };
 
 // player is a seated user
-var user;   // the logged-in user
-var player;
-var player = {
+let user;   // the logged-in user
+//let player;
+let player = {
     name: '',
     cards: []
 };
@@ -236,7 +236,21 @@ PIXI.loader
 function setup() {
     console.log('setup() called.');
     drawTable();
-    addUserContainers();
+    createSeatsContainers();
+
+    // normal, no cards
+    // let data={"0":{"logger":{"name":"com.kukinet.pkr.Player"},"name":"eee","chips":10000,"commited":0,"isChecking":false,"position":0,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},"1":{"logger":{"name":"com.kukinet.pkr.Player"},"name":"fff","chips":10000,"commited":0,"isChecking":false,"position":1,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},"2":{"logger":{"name":"com.kukinet.pkr.Player"},"name":"iii","chips":10000,"commited":0,"isChecking":false,"position":2,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},"3":{"logger":{"name":"com.kukinet.pkr.Player"},"name":"ddd","chips":10000,"commited":0,"isChecking":false,"position":3,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"}}
+
+    // eee face up
+    let data={"0":{"logger":{"name":"com.kukinet.pkr.Player"},"name":"eee","chips":10000,"commited":0,"isChecking":false,"position":0,"inGame":true,"inHand":true,"strHole1":"5c","strHole2":"Kd"},"1":{"logger":{"name":"com.kukinet.pkr.Player"},"name":"fff","chips":10000,"commited":0,"isChecking":false,"position":1,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},"2":{"logger":{"name":"com.kukinet.pkr.Player"},"name":"iii","chips":10000,"commited":0,"isChecking":false,"position":2,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},"3":{"logger":{"name":"com.kukinet.pkr.Player"},"name":"ddd","chips":10000,"commited":0,"isChecking":false,"position":3,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"}}
+
+    updateFull(data);
+    //addUserContainers();
+
+
+
+
+
     //updateCommited(c1, 4444);
     //updateChips(c2, 8000);
     //updateCommited(c1, 30);
@@ -308,8 +322,6 @@ var c2;
 var c3;
 var c4;
 
-var playerContainers;
-
 
 function updateCommited(container, commited){
     container.getChildByName("committed").text = commited;
@@ -342,52 +354,52 @@ function updateChips(container, chips){
 // }
 
 //
-// function makeCommunityCardsContainer(flop1, flop2, flop3, turn, river) {
-//     // create container for deck
-//     var commCards = new PIXI.Container();
-//     commCards.name = "community-ctr";
-//     commCards.name = "deck-ctr";
-//     commCards.scale.x = 0.5;
-//     commCards.scale.y = 0.5;
-//
-//     if (flop1 !== undefined){
-//         var flop1_card = getCardSprite(flop1);
-//         flop1_card.position.set(100, 0);
-//         // flop1_card.scale.x = 0.5;
-//         // flop1_card.scale.y = 0.5;
-//         commCards.addChild(flop1_card);
-//     }
-//     if (flop2 !== undefined){
-//         var flop2_card = getCardSprite(flop2);
-//         flop2_card.position.set(200, 0);
-//         // flop2_card.scale.x = 0.5;
-//         // flop2_card.scale.y = 0.5;
-//         commCards.addChild(flop2_card);
-//     }
-//     if (flop3 !== undefined){
-//         var flop3_card = getCardSprite(flop3);
-//         flop3_card.position.set(300, 0);
-//         // flop3_card.scale.x = 0.5;
-//         // flop3_card.scale.y = 0.5;
-//         commCards.addChild(flop3_card);
-//     }
-//     if (turn !== undefined){
-//         var turn_card = getCardSprite(turn);
-//         turn_card.position.set(450, 0);
-//         // turn_card.scale.x = 0.5;
-//         // turn_card.scale.y = 0.5;
-//         commCards.addChild(turn_card);
-//     }
-//     if (river !== undefined){
-//         var river_card = getCardSprite(river);
-//         river_card.position.set(600, 0);
-//         // river_card.scale.x = 0.5;
-//         // river_card.scale.y = 0.5;
-//         commCards.addChild(river_card);
-//     }
-//     return commCards;
-// }
-//
+function makeCommunityCardsContainer(flop1, flop2, flop3, turn, river) {
+    // create container for deck
+    var commCards = new PIXI.Container();
+    commCards.name = "community-ctr";
+    commCards.name = "deck-ctr";
+    commCards.scale.x = 0.5;
+    commCards.scale.y = 0.5;
+
+    if (flop1 !== undefined){
+        var flop1_card = getCardSprite(flop1);
+        flop1_card.position.set(100, 0);
+        // flop1_card.scale.x = 0.5;
+        // flop1_card.scale.y = 0.5;
+        commCards.addChild(flop1_card);
+    }
+    if (flop2 !== undefined){
+        var flop2_card = getCardSprite(flop2);
+        flop2_card.position.set(200, 0);
+        // flop2_card.scale.x = 0.5;
+        // flop2_card.scale.y = 0.5;
+        commCards.addChild(flop2_card);
+    }
+    if (flop3 !== undefined){
+        var flop3_card = getCardSprite(flop3);
+        flop3_card.position.set(300, 0);
+        // flop3_card.scale.x = 0.5;
+        // flop3_card.scale.y = 0.5;
+        commCards.addChild(flop3_card);
+    }
+    if (turn !== undefined){
+        var turn_card = getCardSprite(turn);
+        turn_card.position.set(450, 0);
+        // turn_card.scale.x = 0.5;
+        // turn_card.scale.y = 0.5;
+        commCards.addChild(turn_card);
+    }
+    if (river !== undefined){
+        var river_card = getCardSprite(river);
+        river_card.position.set(600, 0);
+        // river_card.scale.x = 0.5;
+        // river_card.scale.y = 0.5;
+        commCards.addChild(river_card);
+    }
+    return commCards;
+}
+
 
 
 
@@ -512,12 +524,150 @@ function makeChipsContainerButtomUp(amount){
 
 // return new PIXI.Text(name, style);
 
+// seats is positioned container. it has absolute position on the table
+function createSeatsContainers(){
+
+    seats[0] = new PIXI.Container();
+    seats[0].name = "seat-0";
+    seats[0].x=350;
+    seats[0].y=350;
+    addRect(seats[0]);
+    app.stage.addChild(seats[0]);
+
+    seats[1] = new PIXI.Container();
+    seats[1].name = "seat-1";
+    seats[1].x=200;
+    seats[1].y=350;
+    addRect(seats[1]);
+    app.stage.addChild(seats[1]);
+
+    seats[2] = new PIXI.Container();
+    seats[2].name = "seat-2";
+    seats[2].x=50;
+    seats[2].y=200;
+    addRect(seats[2]);
+    app.stage.addChild(seats[2]);
+
+    seats[3] = new PIXI.Container();
+    seats[3].name = "seat-3";
+    seats[3].x=200;
+    seats[3].y=50;
+    addRect(seats[3]);
+    app.stage.addChild(seats[3]);
+
+    seats[4] = new PIXI.Container();
+    seats[4].name = "seat-4";
+    seats[4].x=300;
+    seats[4].y=50;
+    addRect(seats[4]);
+    app.stage.addChild(seats[4]);
+
+    seats[5] = new PIXI.Container();
+    seats[5].name = "seat-5";
+    seats[5].x=400;
+    seats[5].y=50;
+    addRect(seats[5]);
+    app.stage.addChild(seats[5]);
+
+    seats[6] = new PIXI.Container();
+    seats[6].name = "seat-6";
+    seats[6].x=500;
+    seats[6].y=50;
+    addRect(seats[6]);
+    app.stage.addChild(seats[6]);
+
+
+    seats[7] = new PIXI.Container();
+    seats[7].name = "seat-7";
+    seats[7].x=650;
+    seats[7].y=200;
+    addRect(seats[7]);
+    app.stage.addChild(seats[7]);
+
+    seats[8] = new PIXI.Container();
+    seats[8].name = "seat-8";
+    seats[8].x=500;
+    seats[8].y=350;
+    addRect(seats[8]);
+    app.stage.addChild(seats[8]);
 
 
 
+}
+// tester
+function addRect(container) {
+    let rectangle = new PIXI.Graphics();
+    rectangle.lineStyle(4, 0x44e300, 1);
+    rectangle.beginFill(0x99CCFF);
+    rectangle.drawRect(0, 0, 64, 64);
+    rectangle.endFill();
+    // rectangle.x = 0;
+    // rectangle.y = 0;
+    container.addChild(rectangle);
+
+}
+
+
+// player container
+function createPlayerContainer(seatNumber, avatarFile, name, chips, committed, card1, card2){
+    let userContainer = new PIXI.Container();
+    userContainer.scale.x=0.7;
+    userContainer.scale.y=0.7;
+
+    // player name and avatar
+    let nameSprite = makeTextSprite(name);
+    nameSprite.position.set(20, 260);
+    userContainer.addChild(nameSprite);
+    let avatarSprite = new Sprite(resources[avatarFile].texture);
+    avatarSprite.position.set(10, 160);
+    avatarSprite.scale.x = 0.4;
+    avatarSprite.scale.y = 0.4;
+    userContainer.addChild(avatarSprite);
+
+    // chips
+    let chipsSprite = makeTextSprite(chips);
+    chipsSprite.name = "chips-behind";
+    chipsSprite.position.set(20, 290);
+    userContainer.addChild(chipsSprite);
+
+    // chips committed (text+graphic)
+    let committedSprite = makeTextSprite(committed);
+    committedSprite.name = "committed";
+    committedSprite.position.set(0, 70);
+    userContainer.addChild(committedSprite);
+    let commitedChipsContainer = makeChipsContainerButtomUp(committed);
+    commitedChipsContainer.position.set(0, 0);
+    userContainer.addChild(commitedChipsContainer);
 
 
 
+    console.log("******###" + card1)
+    let card1Sprite = getCardSprite(card1);
+    console.log(card1Sprite);
+    card1Sprite.position.set(0, 100);
+    card1Sprite.scale.x = 0.4;
+    card1Sprite.scale.y = 0.4;
+    userContainer.addChild(card1Sprite);
+
+    let card2Sprite = getCardSprite(card2);
+    card2Sprite.position.set(50, 100);
+    card2Sprite.scale.x = 0.4;
+    card2Sprite.scale.y = 0.4;
+    userContainer.addChild(card2Sprite);
+
+    // var chipCont = makeChipsContainer();
+    // let chipCont = makeChipsContainerButtomUp(committed);
+    // chipCont.position.set(0, 0);
+    //
+    // userContainer.addChild(chipCont);
+    //userContainer.removeChild(chipCont);
+
+    return userContainer;
+    // var circle = circleSprite();
+    // circle.position.set(20, 190);
+    // userContainer.addChild(circle);
+
+}
 
 function getUserContainer(avatarFile, name, chips, card1, card2, x, y){
     var userContainer = new PIXI.Container();
@@ -643,7 +793,20 @@ function updatePlayerChipsBehind(container, amount){
 
 // }
 
+// zzzzzz
+//data={"0":{"logger":{"name":"com.kukinet.pkr.Player"},"name":"eee","chips":10000,"commited":0,"isChecking":false,"position":0,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},"1":{"logger":{"name":"com.kukinet.pkr.Player"},"name":"fff","chips":10000,"commited":0,"isChecking":false,"position":1,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},"2":{"logger":{"name":"com.kukinet.pkr.Player"},"name":"iii","chips":10000,"commited":0,"isChecking":false,"position":2,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},"3":{"logger":{"name":"com.kukinet.pkr.Player"},"name":"ddd","chips":10000,"commited":0,"isChecking":false,"position":3,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"}}
 
+function updateFull(data){
+    console.log(data);
+    console.log("" + data);
+    let numOfPlayers = Object.keys(data).length;
+    for (let i=0; i<numOfPlayers; i++){
+        console.log(seats[i].name);
+        console.log("--- " + data[i].name + " " + data[i].chips + " "+ data[i].commited + " " + data[i].strHole1 + " " + data[i].strHole2);
+        let pc = createPlayerContainer(i, 'images/avatars/human4.jpeg', data[i].name, data[i].chips, data[i].commited, data[i].strHole1, data[i].strHole2);
+        seats[i].addChild(pc)
+    }
+}
 
 function addUserContainers() {
     c1 = getUserContainer('images/avatars/human4.jpeg', "ddd", 7400, "00", "00", 200, 250);
@@ -669,6 +832,7 @@ function addUserContainers() {
     updateCommunityCards(d, "3c", "8d", "Kd", "Ks", "2d");
     //initTest();
     //glow(c4);
+
 
 
 

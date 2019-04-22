@@ -34,21 +34,39 @@ function setStausMessageSprite(message){
 
 
 function getCardSprite(cardCode) {
-    for (var i = 0; i < cards_array.length; i++) {
+    let cc = new PIXI.Container();
+    console.log("getCardSprite called. with " + cardCode);
+    console.log(cardCode);
+    if (cardCode === "XX"){
+        console.log("return empty card sprite.");
+        return cc;
+    }
+
+    for (let i = 0; i < cards_array.length; i++) {
         if (cards_array[i].code == cardCode) {
-            cardSprite = new Sprite(resources[cards_array[i].file].texture);
             // cardSprite.scale.x=0.1;
             // cardSprite.scale.y=0.1;
             //cardSprite.scale.x=0.25;
             //cardSprite.scale.y=0.25;
-            return cardSprite;
+            let card = new Sprite(resources[cards_array[i].file].texture);
+            cc.addChild(card);
+
+            // let cardBg = new PIXI.Graphics();
+            // cardBg.lineStyle(1, 0x44e300, 1);
+            // cardBg.beginFill(0x808080);
+            // // cardBg.drawRect(0, 0, 64, 32);
+            // cardBg.drawRect(88, 34, 339-88, 444-34);
+            // cc.addChild(cardBg);
+            return cc;
+
+
         }
     }
     return null;
 }
 
-function getBetButtonSprite(){
-    var betButtonSprite = new Sprite(resources['images/buttons_120x40/button_bet.png'].texture);
+function getBetButtonSprite(amount){
+    let betButtonSprite = new Sprite(resources['images/buttons_120x40/button_bet.png'].texture);
     betButtonSprite.interactive = true;
     betButtonSprite.click = function() {
         console.log("bet button clicked.");
@@ -56,10 +74,12 @@ function getBetButtonSprite(){
     };
     // betButtonSprite.scale.x=0.1;
     // betButtonSprite.scale.y=0.1;
+    let text = new PIXI.Text(amount, {font: '14px Arial Bold', fill: '#FFFFFF'});
+    betButtonSprite.addChild(text);
     return betButtonSprite;
 }
-function getRaiseButtonSprite(){
-    var raiseButtonSprite = new Sprite(resources['images/buttons_120x40/button_raise.png'].texture);
+function getRaiseButtonSprite(amount){
+    let raiseButtonSprite = new Sprite(resources['images/buttons_120x40/button_raise.png'].texture);
     raiseButtonSprite.interactive = true;
     raiseButtonSprite.click = function() {
         console.log("raise button clicked.");
@@ -67,11 +87,13 @@ function getRaiseButtonSprite(){
     };
     // raiseButtonSprite.scale.x=0.1;
     // raiseButtonSprite.scale.y=0.1;
+    let text = new PIXI.Text(amount, {font: '14px Arial Bold', fill: '#FFFFFF'});
+    raiseButtonSprite.addChild(text);
     return raiseButtonSprite;
 }
 
-function getCallButtonSprite(){
-    var callButtonSprite = new Sprite(resources['images/buttons_120x40/button_call.png'].texture);
+function getCallButtonSprite(amount){
+    let callButtonSprite = new Sprite(resources['images/buttons_120x40/button_call.png'].texture);
     callButtonSprite.interactive = true;
     callButtonSprite.click = function() {
         console.log("call button clicked.");
@@ -79,11 +101,13 @@ function getCallButtonSprite(){
     };
     // callButtonSprite.scale.x=0.1;
     // callButtonSprite.scale.y=0.1;
+    let text = new PIXI.Text(amount, {font: '14px Arial Bold', fill: '#FFFFFF'});
+    callButtonSprite.addChild(text);
     return callButtonSprite;
 }
 
 function getFoldButtonSprite(){
-    var foldButtonSprite = new Sprite(resources['images/buttons_120x40/button_fold.png'].texture);
+    let foldButtonSprite = new Sprite(resources['images/buttons_120x40/button_fold.png'].texture);
     foldButtonSprite.interactive = true;
     //foldButtonSprite.on('click', sendAction("fold", 0));
     foldButtonSprite.click = function() {
@@ -95,7 +119,7 @@ function getFoldButtonSprite(){
     return foldButtonSprite;
 }
 function getCheckButtonSprite(){
-    var checkButtonSprite = new Sprite(resources['images/buttons_120x40/button_check.png'].texture);
+    let checkButtonSprite = new Sprite(resources['images/buttons_120x40/button_check.png'].texture);
     checkButtonSprite.interactive = true;
     checkButtonSprite.click = function() {
         console.log("check button clicked.");
@@ -105,19 +129,19 @@ function getCheckButtonSprite(){
 }
 
 function getBbSprite() {
-    var bbSprite = new Sprite(resources['images/other/bbButton.png'].texture);
+    let bbSprite = new Sprite(resources['images/other/bbButton.png'].texture);
     bbSprite.scale.x=0.1;
     bbSprite.scale.y=0.1;
     return bbSprite;
 }
 function getSbSprite() {
-    var sbSprite = new Sprite(resources['images/other/sbButton.png'].texture);
+    let sbSprite = new Sprite(resources['images/other/sbButton.png'].texture);
     sbSprite.scale.x=0.1;
     sbSprite.scale.y=0.1;
     return sbSprite;
 }
 function getDealerSprite() {
-    var dealerSprite = new Sprite(resources['images/other/dealerButton.png'].texture);
+    let dealerSprite = new Sprite(resources['images/other/dealerButton.png'].texture);
     dealerSprite.scale.x=0.1;
     dealerSprite.scale.y=0.1;
     return dealerSprite;
@@ -125,12 +149,24 @@ function getDealerSprite() {
 
 function drawTable(){
     console.log('drawTable() called.')
-    var table = new Sprite(PIXI.loader.resources['images/other/poker_table.png'].texture);
+    //var table = new Sprite(PIXI.loader.resources['images/other/poker_table.png'].texture);
+
+    let table = newTableContainer();
+    // app.stage.addChild(table);
+
+
     app.stage.addChild(table);
 }
 
-function updateTable(tableSprite){
-    console.log('updateTable() called. // TODO //')
+function updateTable(data){
+    let numOfPlayers = Object.keys(data).length;
+    for (let i=0; i<numOfPlayers; i++){
+        let p = data[i];
+        //getUserContainer()
+        playerContainers[i] = getUserContainer('images/avatars/human4.jpeg', p.name, p.chips ,p.strHole1, p.strHole2, 200+i*100, 250);
+    }
+
+    console.log('updateTable() called. // TODO //');
     app.stage.removeChild(foldButton);
     app.stage.removeChild(checkButton);
     app.stage.removeChild(betButton);
@@ -211,39 +247,41 @@ function drawRiver(code){
 }
 
 
-function drawActionButtons(){
+function drawActionButtons(data){
     console.log('drawActionButtons() called.');
+    let bc = newActionButtonsContainer(data);
+    app.stage.addChild(bc);
 
-    if (options.includes("fold")){
-        foldButton = getFoldButtonSprite();
-        foldButton.x= 100;
-        foldButton.y= 450;
-        app.stage.addChild(foldButton);
-    }
-    if (options.includes("call")) {
-        callButton = getCallButtonSprite();
-        callButton.x = 250;
-        callButton.y = 450;
-        app.stage.addChild(callButton);
-    }
-    if (options.includes("check")) {
-        checkButton = getCheckButtonSprite();
-        checkButton.x = 250;
-        checkButton.y = 500;
-        app.stage.addChild(checkButton);
-    }
-    if (options.includes("bet")) {
-        betButton = getBetButtonSprite();
-        betButton.x = 400;
-        betButton.y = 450;
-        app.stage.addChild(betButton);
-    }
-    if (options.includes("raise")) {
-        raiseButton = getRaiseButtonSprite();
-        raiseButton.x = 400;
-        raiseButton.y = 500;
-        app.stage.addChild(raiseButton);
-    }
+    // if (options.includes("fold")){
+    //     foldButton = getFoldButtonSprite();
+    //     foldButton.x= 100;
+    //     foldButton.y= 450;
+    //     app.stage.addChild(foldButton);
+    // }
+    // if (options.includes("call")) {
+    //     callButton = getCallButtonSprite();
+    //     callButton.x = 250;
+    //     callButton.y = 450;
+    //     app.stage.addChild(callButton);
+    // }
+    // if (options.includes("check")) {
+    //     checkButton = getCheckButtonSprite();
+    //     checkButton.x = 250;
+    //     checkButton.y = 500;
+    //     app.stage.addChild(checkButton);
+    // }
+    // if (options.includes("bet")) {
+    //     betButton = getBetButtonSprite();
+    //     betButton.x = 400;
+    //     betButton.y = 450;
+    //     app.stage.addChild(betButton);
+    // }
+    // if (options.includes("raise")) {
+    //     raiseButton = getRaiseButtonSprite();
+    //     raiseButton.x = 400;
+    //     raiseButton.y = 500;
+    //     app.stage.addChild(raiseButton);
+    // }
 
 }
 
@@ -274,6 +312,31 @@ function drawButtons(buttons){
 function drawBets(amount, seat_id){
 
 }
+
+// drawing cards of specific seat
+function drawHoleCards(code1, code2, container){
+    let hole1 = getCardSprite(code1);
+    hole1.name = 'hole1';
+    hole1.position.set(0,0);
+    hole1.scale.x = TABLE.cards.scale;
+    hole1.scale.y = TABLE.cards.scale;
+    container.addChild(hole1);
+    let hole2 = getCardSprite(code2);
+    hole2.name = 'hole2';
+    hole2.position.set(50,0);
+    hole2.scale.x = TABLE.cards.scale;
+    hole2.scale.y = TABLE.cards.scale;
+    container.addChild(hole2);
+}
+function clearHoleCards(container){
+    let hole1 = container.getChildByName('hole1');
+    let hole2 = container.getChildByName('hole2');
+    container.removeChild(hole1);
+    container.removeChild(hole2);
+}
+
+
+
 // drawing cards of specific seat
 function drawCards(code1, code2, seat_id){
     var location = pocketCardPosition[seat_id];
