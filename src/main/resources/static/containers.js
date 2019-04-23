@@ -14,7 +14,7 @@ function newPlayerContainer(i, avatar, name, chips, commited, card1, card2, x, y
     // betting chips container
     let bet = new PIXI.Container();
     bet.name = 'bet';
-    bet.position.set(POS[i].bet.x, POS[i].bet.y);
+    bet.position.set(PLAYER[i].bet.x, PLAYER[i].bet.y);
     pc.addChild(bet);
 
     // middle square for bg
@@ -23,7 +23,7 @@ function newPlayerContainer(i, avatar, name, chips, commited, card1, card2, x, y
     midRect.beginFill(0x808080);
     midRect.drawRect(0, 0, 64, 64);
     // midRect.position.set(32, 0);
-    midRect.position.set(POS[i].midrect.x, POS[i].midrect.y);
+    midRect.position.set(PLAYER[i].midrect.x, PLAYER[i].midrect.y);
     pc.addChild(midRect);
 
     // avatar container
@@ -47,14 +47,14 @@ function newPlayerContainer(i, avatar, name, chips, commited, card1, card2, x, y
     let img = new Sprite(resources[avatar].texture);
     img.mask = mask;
     ac.addChild(img);
-    ac.position.set(POS[i].ac.x, POS[i].ac.y);
+    ac.position.set(PLAYER[i].ac.x, PLAYER[i].ac.y);
     // ac.position.set(0, 0);
     pc.addChild(ac);
 
     // hole cards container
     let hcc = new PIXI.Container();
     hcc.name = 'hcc';
-    hcc.position.set(POS[i].ac.x, POS[i].ac.y);
+    hcc.position.set(PLAYER[i].hcc.x, PLAYER[i].hcc.y);
     pc.addChild(hcc);
     drawHoleCards(card1, card2, hcc);
 
@@ -86,7 +86,7 @@ function newPlayerContainer(i, avatar, name, chips, commited, card1, card2, x, y
     ncc.addChild(chipsRect);
     // pc1.addChild(chipsRect);
     //ncc.position.set(64, 0);
-    ncc.position.set(POS[i].ncc.x, POS[i].ncc.y);
+    ncc.position.set(PLAYER[i].ncc.x, PLAYER[i].ncc.y);
     pc.addChild(ncc);
 
     pc.position.set(x, y);

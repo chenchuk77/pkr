@@ -1,20 +1,25 @@
+
+
+
 $( document ).ready(function() {
     $('#loggedOut').show('slow');
     $('#loggedIn').show('slow');
     // Add the PIXI canvas
     document.body.appendChild(app.view);
-
 });
 
+let my_pid = 99; // my player id will be calculated from a full update
+let seats = [];
+let ctx_seats = [];
+let holeCards = [];
+let communityCards;
+let bets;
+let buttons;
+let options;
+let optionAmouns;
+let updateScreen=true;
 
-var seats;
-var pocketCards;
-var communityCards;
-var bets;
-var buttons;
-var options;
-var optionAmouns;
-var statusMessage;
+// let statusMessage;
 
 var connection = new WebSocket('ws://192.168.2.39:4444');
 
@@ -30,58 +35,52 @@ connection.onerror = function (error) {
 connection.onmessage = function (e) {
     console.log('server: ' + e.data);
     if (e.data.includes('ante')) {
-        bets = JSON.parse(e.data);
         console.log('bets update received.');
+        bets = JSON.parse(e.data);
     }
     if (e.data.includes('dealerPosition')) {
-        buttons = JSON.parse(e.data);
         console.log('buttons update received.');
+        buttons = JSON.parse(e.data);
         drawButtons(buttons);
     }
     if (e.data.includes('chips') && !e.data.includes('playermove')) { // TODO !!! split to 2 messages (playermove / table)
-        seats = JSON.parse(e.data);
         console.log('full seats update received.');
-        updateTable(e.data);
+        if (updateScreen) {
+            console.log('accepting full update.');
+            ctx_seats = JSON.parse(e.data);
+            // first calculate my own seat for shifting others
+            updateMySeat(ctx_seats);
+            updateFull(ctx_seats);
+            updateScreen = false;
+        } else {
+            console.log('ignoring full update.');
+
+        }
     }
-    if (e.data.includes('card1')) {
-        pocketCards = JSON.parse(e.data);
-        console.log('pocketCards update received.');
-        player.cards=[pocketCards.card1, pocketCards.card2];
-        drawPocketCards(seats);
+    if (e.data.includes('playermove')) {
+        console.log('playermove update received.');
+        updatePlayerMove(e.data)
     }
     if (e.data.includes('status')) {
-        statusMessage = JSON.parse(e.data);
         console.log('status message received.');
+        statusMessage = JSON.parse(e.data);
         drawStatusMessage(statusMessage);
     }
-
-    // if (message.contains("status")) {
-    //     System.out.println("status update received.");
-    //     JsonObject statusJSON = new Gson().fromJson(message, JsonObject.class);
-    //     statusMessage = statusJSON.get("value").getAsString();
-    //     setStatusMessage(statusMessage);
-    // }
-
-
-
     if (e.data.includes('community')) {
-        communityCards = JSON.parse(e.data);
         console.log('communityCards update received.');
-        drawFlop(communityCards.flop1, communityCards.flop2, communityCards.flop3);
-        console.log('flop cards: ' + communityCards.flop1 + ' ' + communityCards.flop2 + ' ' +communityCards.flop1 + '.');
-        if (communityCards.hasOwnProperty('turn')){
-            console.log('turn card: ' + communityCards.turn);
-            drawTurn(communityCards.turn);
-        }
-        if (communityCards.hasOwnProperty('river')){
-            console.log('river card: ' + communityCards.river);
-            drawRiver(communityCards.river);
-        }
+        newCommunityCardsContainer();
+        communityCards = JSON.parse(e.data);
+        updateCommunityCards(e.data);
+    }
+    if (e.data.includes('cards')) {
+        console.log('holecards update received.');
+        // holeCards = 1 and 2 for ctx only
+        updateMyHoleCards(JSON.parse(e.data));
     }
 
     // server notify it waits for a player command
     if (e.data.includes('waitaction')) {
-        var commandJSON = JSON.parse(e.data);
+        let commandJSON = JSON.parse(e.data);
         console.log('waitaction command received.');
         // server waits for us
         if (player.name === commandJSON.player){
@@ -89,24 +88,18 @@ connection.onmessage = function (e) {
             console.log("updating ctx options/amounts.");
             options = commandJSON.options;
             optionAmouns = commandJSON.optionAmounts;
-
-
-
-            drawActionButtons();
+            drawActionButtons(commandJSON);
         } else {
             console.log("its " + commandJSON.player + "'s turn.");
+            // TODO: highlight active player
         }
     }
-
-
-    // received: {"command":"waitaction","player":"fff"}
 
 };
 
 // player is a seated user
-var user;   // the logged-in user
-var player;
-var player = {
+let user;   // the logged-in user
+let player = {
     name: '',
     cards: []
 };
@@ -206,8 +199,6 @@ function sendAction(cmd, amount){
 }
 
 //////////////// PIXI APPLICATION ///////////////////
-
-// Create a Pixi Application
 let app = new Application({
         width: 800,
         height: 600,
@@ -216,29 +207,18 @@ let app = new Application({
         resolution: 1
     }
 );
-// // Add the PIXI canvas
-// document.body.appendChild(app.view);
-
 
 //load all images and invoke setup() when done;
 PIXI.loader
     .add(imageFiles)
     .load(setup);
 
-// function drawTable(){
-//     table = new Sprite(resources['images/other/poker_table.png'].texture);
-//     app.stage.addChild(table);
-// }
-
 //This `setup` function will run when the image has loaded
 function setup() {
-    console.log('setup() called.')
+    console.log('setup() called.');
     drawTable();
-    //player.cards=['Kd','8s'];
-    //drawAllCards(players);
-
-    //drawFlop('Ts', '2h', 'As');
-    //Set the game state
+    createSeatsContainers();
+   //Set the game state
     state = play;
 
     //Start the game loop
@@ -255,75 +235,141 @@ function play(delta) {
 }
 
 
+//////////////////////////////////////////////////////////////////////////////
+// seats is positioned container. it has absolute position on the table
+function createSeatsContainers() {
+    for (let i = 0; i < 9; i++) {
+        seats[i] = new PIXI.Container();
+        seats[i].name = "seat-" + i;
+        seats[i].position.set(PLAYER[i].position.x, PLAYER[i].position.y);
+        addRect(seats[i]);
+        app.stage.addChild(seats[i]);
+    }
+}
+// tester
+function addRect(container) {
+    let rectangle = new PIXI.Graphics();
+    rectangle.lineStyle(4, 0x44e300, 1);
+    rectangle.beginFill(0x99CCFF);
+    rectangle.drawRect(0, 0, 60, 60);
+    rectangle.endFill();
+    // rectangle.x = 0;
+    // rectangle.y = 0;
+    container.addChild(rectangle);
 
+}
+
+// find my own player data to bind to seat[0]
+function updateMySeat(data){
+    for (let i=0; i<Object.keys(data).length; i++ ){
+        console.log ("checking " + data[i].name);
+        if (data[i].name === player.name){
+            my_pid = i;
+            console.log ("my player id: " + my_pid);
+            return;
+        }
+    }
+    console.error("cant find my seat");
+}
+
+// find my own player data to bind to seat[0]
+function seatOf(realPlayerIndex){
+    let numOfPlayers = seats.length;
+    // s will hold the actual seat number for this player
+    // this will let player at data[2] (i=2) to seat in seat[0] (s=0)
+    let visualSeatId = realPlayerIndex - my_pid;
+    if (visualSeatId < 0){
+        visualSeatId += numOfPlayers;
+    }
+    console.log("real=%d, visual=%d", realPlayerIndex, visualSeatId);
+    return visualSeatId;
+}
+
+
+// create visual shifted containers for each players and add to seats[]
+function updateFull(data){
+    // {"0":{"logger":{"name":"com.kukinet.pkr.Player"},"name":"eee","chips":10000,"commited":0,"isChecking":false,"position":0,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},"1":{"logger":{"name":"com.kukinet.pkr.Player"},"name":"fff","chips":10000,"commited":0,"isChecking":false,"position":1,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},"2":{"logger":{"name":"com.kukinet.pkr.Player"},"name":"iii","chips":10000,"commited":0,"isChecking":false,"position":2,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},"3":{"logger":{"name":"com.kukinet.pkr.Player"},"name":"ddd","chips":10000,"commited":0,"isChecking":false,"position":3,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"}}
+    console.log(data);
+    console.log("" + data);
+    let numOfPlayers = Object.keys(data).length;
+    console.log("numOfPlayers=" +numOfPlayers);
+    for (let i=0; i<numOfPlayers; i++){
+        // s will hold the actual seat number for this player
+        // this will let player at data[2] (i=2) to seat in seat[0] (s=0)
+        let s = seatOf(i);
+        let p = data[Object.keys(data)[i]];
+        console.log("seating %s from data[%d] at seat[%d].", p.name, i, s);
+        let pc = newPlayerContainer(s, 'images/avatars/girl1.jpeg', p.name, p.chips, p.commited, p.strHole1, p.strHole2);
+        seats[s].addChild(pc)
+    }
+}
+
+function updatePlayerMove(data){
+    // {"type":"playermove","seat":0,"player":{"logger":{"name":"com.kukinet.pkr.Player"},"name":"eee","chips":9970,"commited":30,"isChecking":false,"position":0,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},"command":"sb","value":30,"pot":30}
+    if (data.type !== 'playermove') return -1;
+    let pc = seats[data.seat].getChildByName('pc');
+    pc.getChildByName('ncc')
+        .getChildByName('chipsrect')
+        .getChildByName('chips').text = data.player.chips;
+    // let commited = newChipsContainer(data.player.commited);
+    let commited = newChipsContainer(data.player.commited);
+    let bet = pc.getChildByName('bet');
+    commited.position.set(0, 0);
+    bet.addChild(commited);
+}
+
+function updateCommunityCards(data){
+    // {"type":"community","flop1":"Ah","flop2":"Ad","flop3":"Ac"}
+    if (data.type !== 'community') return -1;
+    // let tc = app.stage.getChildByName('tc').getChildByName('table');
+    let tc = app.stage.getChildByName('tc');
+    // remove old container
+    tc.removeChild(tc.getChildByName('ccc'));
+    let ccc = newCommunityCardsContainer(data);
+    ccc.position.set(TABLE.ccc.x, TABLE.ccc.y);
+    tc.addChild(ccc);
+}
+
+function updateMyHoleCards(data) {
+    // ignore: {"type":"cards","seat":3,"card1":"5c"}
+    // {"type":"cards","seat":3,"card1":"5c","card2":"9c"}
+    if (data.type !== 'cards') return -1;
+    if (data.card2 !== undefined){
+        let hcc = seats[seatOf(data.seat)].getChildByName('pc')
+            .getChildByName('hcc');
+        drawHoleCards(data.card1 ,data.card2, hcc);
+    }
+}
+
+function updatePot(amount){
+    let tc = app.stage.getChildByName('tc').getChildByName('table');
+    // remove old container
+    tc.removeChild(tc.getChildByName('pot'));
+    let pot = newPotContainer(amount);
+    pot.position.set(TABLE.pot.x, TABLE.pot.y);
+    tc.addChild(pot);
+}
+
+
+
+// EXAMPLES:
 //
-// var setState = function(){
-//     // received: players=[ddd,false,10000,10000,0,eee,false,10000,10000,0,fff,false,10000,10000,0,iii,false,10000,10000,0,],buttons=302,ante=0sb=0bb=0
-//     // received: ddd,30,sb
-//     // received: players=[ddd,false,10000,9970,30,eee,false,10000,10000,0,fff,false,10000,10000,0,iii,false,10000,10000,0,],buttons=013,ante=0sb=30bb=60
-//     // received: eee,60,bb
-//     // received: players=[ddd,false,10000,9970,30,eee,false,10000,9940,60,fff,false,10000,10000,0,iii,false,10000,10000,0,],buttons=013,ante=0sb=30bb=60
-//     data='players=[ddd,false,10000,10000,0,eee,false,10000,10000,0,fff,false,10000,10000,0,iii,false,10000,10000,0,],buttons=302,ante=0,sb=0,bb=0'
-//
-//     table_data=data.split(']')[1]
-//     //,buttons=302,ante=0,sb=0,bb=0
-//     players_data=data.split(']')[0]
-//     players_data = players_data.split('[')[1]
-//
-// }
-//
-// // document.body.innerHTML += '<div style="position:absolute;width:100%;height:100%;opacity:0.3;z-index:100;background:#000;"></div>';
-// // document.body.innerHTML += '<div id="myCanvas" style="position:absolute;width:50%;height:50%;opacity:0.3;z-index:100;background:#000;"></div>';
-//
-// document.body.innerHTML = '<canvas id="myCanvas" width="800" height="600"></canvas>';
-// var canvas = document.getElementById("myCanvas");
-// var ctx = canvas.getContext("2d");
-//
-// ctx.fillStyle = "#FF0000";
-// ctx.fillRect(0, 0, 800, 600);
-//
-// var canvas = document.getElementById("myCanvas");
-// var ctx = canvas.getContext("2d");
-// ctx.fillStyle = "#FFFFFF";
-// ctx.fillRect(0, 0, 32, 32);
-// ///////////////////////////////////////////////////////////////////////////
-//
-//
-// document.body.innerHTML = '<canvas id="myCanvas" width="800" height="600"></canvas>';
-// var canvas = document.getElementById("myCanvas");
-// var ctx = canvas.getContext("2d");
-// // Draw the ellipse
-// ctx.fillStyle = 'black';
-// ctx.beginPath();
-// ctx.ellipse(300, 300, 250, 150, Math.PI , 0, Math.PI * 2);
-// ctx.fill();
-// ctx.fillStyle = 'blue';
-// ctx.beginPath();
-// ctx.ellipse(300, 300, 230, 130, Math.PI , 0, Math.PI * 2);
-// ctx.fill();
-// ///////////////////////////////////////////////////////////////////////////
-//
-//
-// var script = document.createElement('script');
-// script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.5.1/pixi.min.js';
-// document.head.appendChild(script);
-//
-// function setup() {
-//     let three_clubs = new PIXI.Sprite(PIXI.loader.resources["cards/3_of_clubs.png"].texture);
-//     app.stage.addChild(cat);
-//
-// );
-// }
-// PIXI.loader
-//     .add([
-//         "cards/3_of_clubs.png",
-//         "cards/3_of_diamonds.png"
-//     ])
-//     .load(setup);
-//
-//
-// //Create a Pixi Application
-// let app = new PIXI.Application({width: 256, height: 256});
-//
-// //Add the canvas that Pixi automatically created for you to the HTML document
-// document.body.appendChild(app.view);
+// server: {"type":"status","value":"new hand # 1"}
+// server: {"ante":0,"sb":30,"bb":60}
+// server: {"sbPosition":0,"bbPosition":1,"dealerPosition":3}
+// server: {"type":"cards","seat":3,"card1":"5c"}
+// server: {"type":"cards","seat":3,"card1":"5c","card2":"9c"}
+// server: {"type":"playermove","seat":0,"player":{"logger":{"name":"com.kukinet.pkr.Player"},"name":"eee","chips":9970,"commited":30,"isChecking":false,"position":0,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},"command":"sb","value":30,"pot":30}
+// server: {"type":"status","value":"iii call 60."}
+// server: {"type":"waitaction","player":"eee","options":["fold","call","raise","allin"],"optionAmounts":{"call":30,"max_raise":9970,"min_raise":120,"allin":9970}}
+// server: {"type":"status","value":"dealing flop."}
+// server: {"type":"community","flop1":"Ah","flop2":"Ad","flop3":"Ac"}
+
+
+
+//{"type":"playermove",
+// "seat":0,
+// "player":// {"name":"eee","chips":9940,"commited":60,"isChecking":false,"position":0,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},
+// "command":"call",
+// "value":30,
+// "pot":240}

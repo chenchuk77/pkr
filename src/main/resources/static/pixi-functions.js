@@ -38,28 +38,25 @@ function getCardSprite(cardCode) {
     console.log("getCardSprite called. with " + cardCode);
     console.log(cardCode);
     if (cardCode === "XX"){
-        console.log("return empty card sprite.");
+        let hiddenCard = new Sprite(resources['images/cards/back.svg'].texture);
+        cc.addChild(hiddenCard);
         return cc;
     }
 
     for (let i = 0; i < cards_array.length; i++) {
-        if (cards_array[i].code == cardCode) {
-            // cardSprite.scale.x=0.1;
-            // cardSprite.scale.y=0.1;
-            //cardSprite.scale.x=0.25;
-            //cardSprite.scale.y=0.25;
+        if (cards_array[i].code === cardCode) {
+            let cardBg = new PIXI.Graphics();
+            cardBg.lineStyle(1, 0xeefffc, 1);
+            cardBg.beginFill(0xeeffcc);
+            //cardBg.drawRoundedRect(0, 0, (334-90)*TABLE.cards.scale+2, (440-36)*TABLE.cards.scale+2, 140);
+            cardBg.drawRoundedRect(0, 0,119, 155, 12);
+            //cardBg.drawRect(0, 0, 119, 155);
+            //cardBg.position.set(90, 36);
+            cc.addChild(cardBg);
             let card = new Sprite(resources[cards_array[i].file].texture);
+            card.position.set(2,2);
             cc.addChild(card);
-
-            // let cardBg = new PIXI.Graphics();
-            // cardBg.lineStyle(1, 0x44e300, 1);
-            // cardBg.beginFill(0x808080);
-            // // cardBg.drawRect(0, 0, 64, 32);
-            // cardBg.drawRect(88, 34, 339-88, 444-34);
-            // cc.addChild(cardBg);
             return cc;
-
-
         }
     }
     return null;
