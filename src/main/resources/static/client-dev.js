@@ -19,83 +19,8 @@ let options;
 let optionAmouns;
 let updateScreen=true;
 
-// let statusMessage;
 
-// var connection = new WebSocket('ws://192.168.2.39:4444');
-//
-// connection.onopen = function () {
-//     console.log('client connected.');
-//     connection.send('hello from javascript client.'); // Send the message 'Ping' to the server
-// };
-//
-// connection.onerror = function (error) {
-//     console.log('WebSocket Error ' + error);
-// };
-//
-// connection.onmessage = function (e) {
-//     console.log('server: ' + e.data);
-//     if (e.data.includes('ante')) {
-//         console.log('bets update received.');
-//         bets = JSON.parse(e.data);
-//     }
-//     if (e.data.includes('dealerPosition')) {
-//         console.log('buttons update received.');
-//         buttons = JSON.parse(e.data);
-//         drawButtons(buttons);
-//     }
-//     if (e.data.includes('chips') && !e.data.includes('playermove')) { // TODO !!! split to 2 messages (playermove / table)
-//         console.log('full seats update received.');
-//         if (updateScreen) {
-//             console.log('accepting full update.');
-//             ctx_seats = JSON.parse(e.data);
-//             // first calculate my own seat for shifting others
-//             updateMySeat(ctx_seats);
-//             updateFull(ctx_seats);
-//             updateScreen = false;
-//         } else {
-//             console.log('ignoring full update.');
-//
-//         }
-//     }
-//     if (e.data.includes('playermove')) {
-//         console.log('playermove update received.');
-//         updatePlayerMove(e.data)
-//     }
-//     if (e.data.includes('status')) {
-//         console.log('status message received.');
-//         statusMessage = JSON.parse(e.data);
-//         drawStatusMessage(statusMessage);
-//     }
-//     if (e.data.includes('community')) {
-//         console.log('communityCards update received.');
-//         newCommunityCardsContainer();
-//         communityCards = JSON.parse(e.data);
-//         updateCommunityCards(e.data);
-//     }
-//     if (e.data.includes('cards')) {
-//         console.log('holecards update received.');
-//         // holeCards = 1 and 2 for ctx only
-//         updateMyHoleCards(JSON.parse(e.data));
-//     }
-//
-//     // server notify it waits for a player command
-//     if (e.data.includes('waitaction')) {
-//         let commandJSON = JSON.parse(e.data);
-//         console.log('waitaction command received.');
-//         // server waits for us
-//         if (player.name === commandJSON.player){
-//             console.log("server is waiting for our command.");
-//             console.log("updating ctx options/amounts.");
-//             options = commandJSON.options;
-//             optionAmouns = commandJSON.optionAmounts;
-//             drawActionButtons(commandJSON);
-//         } else {
-//             console.log("its " + commandJSON.player + "'s turn.");
-//             // TODO: highlight active player
-//         }
-//     }
-//
-// };
+
 
 // player is a seated user
 let user;   // the logged-in user
@@ -106,90 +31,7 @@ let player = {
 };
 
 
-// var login = function(){
-//     var username = $('#username').val();
-//     var password = $('#password').val();
-//     connection.send("login" + "," + username + "," + password);
-//     console.log('client logged in.');
-//     user = username;
-//     player.name = username;
-//     $('#loggedOut').show();
-//     connection.send('statusrequest');
-// };
-//
-// var logout = function(){
-//     var username = $('#username').val();
-//     connection.send("logout" + "," + username);
-//     console.log('client logout requested.');
-// };
-//
-// var register = function(){
-//     var username = $('#username').val();
-//     var gamename = $('#gamename').val();
-//     connection.send("register" + "," + username + ',' + gamename);
-//     console.log('client registration requested.');
-// };
 
-// var startGame = function(){
-//     var gamename = $('#gamename').val();
-//     connection.send("start-game" + "," + gamename);
-//     console.log('start-game requested [ADMIN].');
-// };
-
-// var createGame = function(){
-//     var username = $('#username').val();
-//     var gamename = $('#gamename').val();
-//     connection.send("register" + "," + username + ',' + gamename);
-// console.log('create-game requested [ADMIN].');
-// };
-
-//
-//
-// var bet = function(){
-//     // connection.send('bet: 300');
-//     actionCommand = {"action": "bet", "amount": 500};
-//     connection.send(actionCommand);
-//
-//
-// };
-// var raise = function(){
-//     // connection.send('raise: 700');
-//     actionCommand = {"action": "raise", "amount": 700};
-//     connection.send(actionCommand);
-//
-// };
-// var fold = function(){
-//     actionCommand = {"action": "fold", "amount": 0};
-//     // connection.send('fold');
-//     connection.send(JSON.stringify(actionCommand));
-//     // actionJSON.addProperty("action", "fold");
-//     // actionJSON.addProperty("amount", 0);
-//
-//
-// };
-// var call = function(){
-//     // connection.send('call: 300');
-//     actionCommand = {"action": "call", "amount": 0};
-//     // connection.send('fold');
-//     connection.send(actionCommand);
-//
-// };
-//
-//     // if (str.contains(',')) {
-//     //cmd = str.split(',')[0];
-//    // amount = parseInt(str.split(',')[1]);
-//     actionCommand = {"action": cmd, "amount": amount};
-//     console.log(actionCommand);
-//
-//
-//     console.log("sending command: " + actionCommand);
-//     connection.send(JSON.stringify(actionCommand));
-//
-//     // } else {
-//     //     console.log("unsupported... use full commands. ie: call,50 or fold,0 ")
-// // }
-//
-// }
 
 
 
@@ -220,30 +62,50 @@ function setup() {
     createSeatsContainers();
 
     let data={
-        "0":{"name":"ddd","chips":4500,"commited":150,"isChecking":false,"position":0,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},
-        "1":{"name":"p1" ,"chips":7000,"commited":300,"isChecking":false,"position":1,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},
-        "2":{"name":"eee","chips":7000,"commited":300,"isChecking":false,"position":2,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},
-        "3":{"name":"fff","chips":24000,"commited":0, "isChecking":false,"position":3,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},
+        "0":{"name":"p0","chips":1000,"commited":150,"isChecking":false,"position":0,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},
+        "1":{"name":"p1" ,"chips":2000,"commited":300,"isChecking":false,"position":1,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},
+        "2":{"name":"p2","chips":7000,"commited":300,"isChecking":false,"position":2,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},
+        "3":{"name":"p3","chips":24000,"commited":0, "isChecking":false,"position":3,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},
         "4":{"name":"p4", "chips":24000,"commited":0, "isChecking":false,"position":4,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},
         "5":{"name":"p5", "chips":24000,"commited":0, "isChecking":false,"position":5,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},
         "6":{"name":"p6", "chips":24000,"commited":0, "isChecking":false,"position":6,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},
-        "7":{"name":"iii","chips":1900,"commited":900,"isChecking":false,"position":7,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},
+        "7":{"name":"p7","chips":1900,"commited":900,"isChecking":false,"position":7,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},
         "8":{"name":"p8", "chips":1900,"commited":900,"isChecking":false,"position":8,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"}};
 
     // first calculate my own seat
     updateMySeat(data);
     updateFull(data);
 
-    let playre_move_data = {
-        "type":"playermove",
-        "seat":3,
-        "player":{"name":"eee","chips":9940,"commited":60,
-                  "isChecking":false,"position":0,"inGame":true,
-                  "inHand":true,"strHole1":"XX","strHole2":"XX"},
-        "command":"call",
-        "value":30,
-        "pot":240};
-    updatePlayerMove(playre_move_data);
+    // let playre_move_data = {
+    //     "type":"playermove",
+    //     "seat":6,
+    //     "player":{"name":"p6","chips":9940,"commited":6666,
+    //               "isChecking":false,"position":6,"inGame":true,
+    //               "inHand":true,"strHole1":"XX","strHole2":"XX"},
+    //     "command":"call",
+    //     "value":30,
+    //     "pot":240};
+    // updatePlayerMove(playre_move_data);
+
+    let playre_move_data0 = {"type":"playermove","seat":0,"player":{"name":"p0","chips":1000,"commited":2000,"isChecking":false,"position":1,"inGame":true, "inHand":true,"strHole1":"XX","strHole2":"XX"},"command":"call","value":30,"pot":240};0
+    updatePlayerMove(playre_move_data0);
+    let playre_move_data1 = {"type":"playermove","seat":1,"player":{"name":"p1","chips":1100,"commited":2100,"isChecking":false,"position":1,"inGame":true, "inHand":true,"strHole1":"XX","strHole2":"XX"},"command":"call","value":30,"pot":240};
+    updatePlayerMove(playre_move_data1);
+    let playre_move_data2 = {"type":"playermove","seat":2,"player":{"name":"p2","chips":1200,"commited":2200,"isChecking":false,"position":2,"inGame":true, "inHand":true,"strHole1":"XX","strHole2":"XX"},"command":"call","value":30,"pot":240};
+    updatePlayerMove(playre_move_data2);
+    let playre_move_data3 = {"type":"playermove","seat":3,"player":{"name":"p3","chips":1300,"commited":2300,"isChecking":false,"position":2,"inGame":true, "inHand":true,"strHole1":"XX","strHole2":"XX"},"command":"call","value":30,"pot":240};
+    updatePlayerMove(playre_move_data3);
+    let playre_move_data4 = {"type":"playermove","seat":4,"player":{"name":"p4","chips":1400,"commited":2400,"isChecking":false,"position":6,"inGame":true, "inHand":true,"strHole1":"XX","strHole2":"XX"},"command":"call","value":30,"pot":240};
+    updatePlayerMove(playre_move_data4);
+    let playre_move_data5 = {"type":"playermove","seat":5,"player":{"name":"p5","chips":1500,"commited":2500,"isChecking":false,"position":0,"inGame":true, "inHand":true,"strHole1":"XX","strHole2":"XX"},"command":"call","value":30,"pot":240};
+    updatePlayerMove(playre_move_data5);
+    let playre_move_data6 = {"type":"playermove","seat":6,"player":{"name":"p6","chips":1600,"commited":2600,"isChecking":false,"position":6,"inGame":true, "inHand":true,"strHole1":"XX","strHole2":"XX"},"command":"call","value":30,"pot":240};
+    updatePlayerMove(playre_move_data6);
+    let playre_move_data7 = {"type":"playermove","seat":7,"player":{"name":"p7","chips":1700,"commited":2700,"isChecking":false,"position":0,"inGame":true, "inHand":true,"strHole1":"XX","strHole2":"XX"},"command":"call","value":30,"pot":240};
+    updatePlayerMove(playre_move_data7);
+    let playre_move_data8 = {"type":"playermove","seat":8,"player":{"name":"p8","chips":1800,"commited":2800,"isChecking":false,"position":6,"inGame":true, "inHand":true,"strHole1":"XX","strHole2":"XX"},"command":"call","value":30,"pot":240};
+    updatePlayerMove(playre_move_data8);
+
 
     //let community_cards_data2 = {"type":"community","flop1":"3h","flop2":"Ac","flop3":"Ad", "turn": "8h", "": "9s"};
     //updateCommunityCards(community_cards_data2);
@@ -290,47 +152,17 @@ function play(delta) {
     //console.log('in play loop...')
 }
 
-// let pc = newPlayerContainer(i, 'images/avatars/girl1.jpeg', p.name, p.chips, p.commited, p.strHole1, p.strHole2);
-
-
-
-
-
 
 
 
 
 function updateCommited(container, commited){
     container.getChildByName("committed").text = commited;
-
 }
 
 function updateChips(container, chips){
     container.getChildByName("chips-behind").text = chips;
-
 }
-
-
-
-
-
-// function makeDeckContainer() {
-//     // create container for deck
-//     var deck = new PIXI.Container();
-//     deck.name = "deck-ctr";
-//     deck.scale.x = 0.5;
-//     deck.scale.y = 0.5;
-//
-//     var cards = new Sprite(resources['images/cards/back.svg'].texture);
-//     cards.position.set(0, 0);
-//     cards.scale.x = 0.5;
-//     cards.scale.y = 0.5;
-//     deck.addChild(cards);
-//
-//     return deck;
-//
-// }
-
 
 // seats is positioned container. it has absolute position on the table
 function createSeatsContainers() {
@@ -338,6 +170,7 @@ function createSeatsContainers() {
         seats[i] = new PIXI.Container();
         seats[i].name = "seat-" + i;
         seats[i].position.set(PLAYER[i].position.x, PLAYER[i].position.y);
+        //seats[i].anchor.set(0.5, 0.5);
         addRect(seats[i]);
         app.stage.addChild(seats[i]);
     }
@@ -437,18 +270,54 @@ function updateFull(data){
 }
 
 function updatePlayerMove(data){
-    // {"type":"playermove","seat":0,"player":{"logger":{"name":"com.kukinet.pkr.Player"},"name":"eee","chips":9970,"commited":30,"isChecking":false,"position":0,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},"command":"sb","value":30,"pot":30}
+    // {"type":"playermove","seat":0,"player":{"name":"eee","chips":9970,"commited":30,"isChecking":false,"position":0,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},"command":"sb","value":30,"pot":30}
     if (data.type !== 'playermove') return -1;
-    let pc = seats[data.seat].getChildByName('pc');
-    pc.getChildByName('ncc')
-      .getChildByName('chipsrect')
-      .getChildByName('chips').text = data.player.chips;
+
+    let seat = seatOf(data.seat);
+    updatePlayerChips(seat, data.player.chips);
+    updatePlayerBet(seat, data.player.commited);
+
+
+    // let pc = seats[data.seat].getChildByName('pc');
+    // pc.getChildByName('ncc')
+    //   .getChildByName('chipsrect')
+    //   .getChildByName('chips').text = data.player.chips;
     // let commited = newChipsContainer(data.player.commited);
-    let commited = newChipsContainer(data.player.commited);
-    let bet = pc.getChildByName('bet');
-    commited.position.set(0, 0);
-    bet.addChild(commited);
+    // let commited = newChipsContainer(data.player.commited);
+    // let bet = pc.getChildByName('bd');
+    // commited.position.set(0, 0);
+    // bet.addChild(commited);
 }
+
+function updatePlayerChips(seat, amount){
+    let pc = seats[seat].getChildByName('pc');
+    pc.getChildByName('ncc')
+        .getChildByName('chipsrect')
+        .getChildByName('chips').text = amount;
+}
+
+function updatePlayerBet(seat, amount){
+    let bc = seats[seat].getChildByName('pc')
+                        .getChildByName('bc');
+    // remove old container if exists
+    let oldc = bc.getChildByName('bet');
+    if ( oldc !== undefined ) {
+        bc.removeChild(oldc)
+    }
+    let bet = newBetContainer(amount);
+    // bet.name = 'bet';
+    bc.addChild(bet);
+}
+
+// function updatePlayerBet(player_seat, amount){
+//     chipsc = newChipsContainer()
+//
+// }
+
+
+
+
+
 
 function updateCommunityCards(data){
     // {"type":"community","flop1":"Ah","flop2":"Ad","flop3":"Ac"}
@@ -467,7 +336,8 @@ function updateMyHoleCards(data) {
     // {"type":"cards","seat":3,"card1":"5c","card2":"9c"}
     if (data.type !== 'cards') return -1;
     if (data.card2 !== undefined){
-        let hcc = seats[seatOf(data.seat)].getChildByName('pc')
+        let hcc = seats[seatOf(data.seat)]
+            .getChildByName('pc')
             .getChildByName('hcc');
         drawHoleCards(data.card1 ,data.card2, hcc);
     }
@@ -481,6 +351,7 @@ function updatePot(amount){
     pot.position.set(TABLE.pot.x, TABLE.pot.y);
     tc.addChild(pot);
 }
+
 
 
 

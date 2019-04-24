@@ -146,12 +146,7 @@ function getDealerSprite() {
 
 function drawTable(){
     console.log('drawTable() called.')
-    //var table = new Sprite(PIXI.loader.resources['images/other/poker_table.png'].texture);
-
     let table = newTableContainer();
-    // app.stage.addChild(table);
-
-
     app.stage.addChild(table);
 }
 

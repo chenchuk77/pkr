@@ -11,11 +11,11 @@ function newPlayerContainer(i, avatar, name, chips, commited, card1, card2, x, y
     let pc = new PIXI.Container();
     pc.name = 'pc';
 
-    // betting chips container
-    let bet = new PIXI.Container();
-    bet.name = 'bet';
-    bet.position.set(PLAYER[i].bet.x, PLAYER[i].bet.y);
-    pc.addChild(bet);
+    // // betting chips container
+    // let bet = new PIXI.Container();
+    // bet.name = 'bet';
+    // bet.position.set(PLAYER[i].bet.x, PLAYER[i].bet.y);
+    // pc.addChild(bet);
 
     // middle square for bg
     let midRect = new PIXI.Graphics();
@@ -89,6 +89,19 @@ function newPlayerContainer(i, avatar, name, chips, commited, card1, card2, x, y
     ncc.position.set(PLAYER[i].ncc.x, PLAYER[i].ncc.y);
     pc.addChild(ncc);
 
+    // bet container
+    let bc = new PIXI.Container();
+    bc.name = 'bc';
+    bc.position.set(PLAYER[i].bc.x, PLAYER[i].bc.y);
+    //bc.position.set(10, -10);
+    pc.addChild(bc);
+
+    // dealer button container
+    let dbc = new PIXI.Container();
+    dbc.name = 'dbc';
+    dbc.position.set(PLAYER[i].dbc.x, PLAYER[i].dbc.y);
+    pc.addChild(dbc);
+
     pc.position.set(x, y);
     return pc;
 
@@ -115,11 +128,7 @@ function newChipsContainer(amount){
     chips_5   = Math.floor(reminder / 5);
     chips_1   = reminder - chips_5 * 5;
 
-    // console.log("1000:" + chips_1000 + "\n" +
-    //     "100:" + chips_100 + "\n" +
-    //     "25:" + chips_25 + "\n" +
-    //     "5:" + chips_5 + "\n" +
-    //     "1:" + chips_1 + "\n");
+    // console.log("1000:" + chips_1000 + ", 100:" + chips_100 + ", 25:" + chips_25 + ", 5:" + chips_5 + ", 1:" + chips_1 + ".");
 
     // create container for chips
     let chips_ctr = new PIXI.Container();
@@ -193,12 +202,19 @@ function newChipsContainer(amount){
     return chips_ctr;
 }
 
+
 function newPotContainer(amount){
     let potc = newChipsContainer(amount);
     potc.position.set(TABLE.pot.x, TABLE.pot.y);
     potc.name = 'pot';
     return potc;
 }
+function newBetContainer(amount){
+    let betc = newChipsContainer(amount);
+    betc.name = 'bet';
+    return betc;
+}
+
 
 function newTableContainer(){
     // table container (pot, deck, commcards)
