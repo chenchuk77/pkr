@@ -17,9 +17,15 @@ let bets;
 let buttons;
 let options;
 let optionAmouns;
-let updateScreen=true;
+let updateScreen=false;
 
-// let statusMessage;
+let statusMessages = ['init message.'];
+let highlighter;
+let highlighter_count = 0;
+
+// stash for non visible components
+let stash = new PIXI.Container();
+let dealer_button;
 
 var connection = new WebSocket('ws://192.168.2.39:4444');
 
@@ -41,7 +47,7 @@ connection.onmessage = function (e) {
     if (e.data.includes('dealerPosition')) {
         console.log('buttons update received.');
         buttons = JSON.parse(e.data);
-        drawButtons(buttons);
+        moveDealerButton(buttons);
     }
     if (e.data.includes('chips') && !e.data.includes('playermove')) { // TODO !!! split to 2 messages (playermove / table)
         console.log('full seats update received.');
@@ -59,24 +65,59 @@ connection.onmessage = function (e) {
     }
     if (e.data.includes('playermove')) {
         console.log('playermove update received.');
-        updatePlayerMove(e.data)
+        playermoveJSON = JSON.parse(e.data);
+        updatePlayerMove(playermoveJSON)
     }
     if (e.data.includes('status')) {
         console.log('status message received.');
-        statusMessage = JSON.parse(e.data);
-        drawStatusMessage(statusMessage);
+        console.log('----------------------------------');
+        console.log(e.data);
+        let statusJSON = JSON.parse(e.data);
+        console.log(statusJSON);
+        // drawStatusMessage(statusMessage);
+        updateStatusMessages(statusJSON);
+        if (statusJSON.value.includes('new hand')){
+            console.log('starting a new hand.');
+            removeAllHoleCards();
+            updateScreen = true;
+        }
+        if (statusJSON.value.includes('dealing flop')){
+            console.log('dealing flop.');
+            clearAllPlayersBets();
+        }
+        if (statusJSON.value.includes('dealing turn')){
+            console.log('dealing turn.');
+            clearAllPlayersBets();
+        }
+        if (statusJSON.value.includes('dealing river')){
+            console.log('dealing river.');
+            clearAllPlayersBets();
+        }
     }
+
+
+
+            // {"type":"status","value":"new hand # 1"}
+
+    // }
     if (e.data.includes('community')) {
         console.log('communityCards update received.');
-        newCommunityCardsContainer();
+        //newCommunityCardsContainer();
         communityCards = JSON.parse(e.data);
-        updateCommunityCards(e.data);
+        updateCommunityCards(communityCards);
     }
     if (e.data.includes('cards')) {
         console.log('holecards update received.');
         // holeCards = 1 and 2 for ctx only
         updateMyHoleCards(JSON.parse(e.data));
     }
+    if (e.data.includes('dealerPosition')) {
+        let buttonsJSON = JSON.parse(e.data);
+        moveDealerButton(buttonsJSON);
+    }
+
+
+
 
     // server notify it waits for a player command
     if (e.data.includes('waitaction')) {
@@ -89,9 +130,13 @@ connection.onmessage = function (e) {
             options = commandJSON.options;
             optionAmouns = commandJSON.optionAmounts;
             drawActionButtons(commandJSON);
+            addActionButtonHandlers(commandJSON)
+
         } else {
+            // not our turn
+            // removeActionButtons();
             console.log("its " + commandJSON.player + "'s turn.");
-            // TODO: highlight active player
+            highLightPlayer(commandJSON);
         }
     }
 
@@ -176,17 +221,8 @@ var call = function(){
 
 // use this to send commands (will be replaced by action buttons when implemented)
 function sendAction(cmd, amount){
-
-    console.log(cmd);
-    console.log(amount);
-    console.log("cmd:" + cmd + ", amount: " + amount);
-    //console.log("cmd:" + cmd.type() + ", amount: " + amount.type());
-
-    // if (str.contains(',')) {
-    //cmd = str.split(',')[0];
-   // amount = parseInt(str.split(',')[1]);
-    actionCommand = {"action": cmd, "amount": amount};
-    console.log(actionCommand);
+    let actionCommand = {"action": cmd, "amount": amount};
+    //console.log(actionCommand);
 
 
     console.log("sending command: " + actionCommand);
@@ -200,8 +236,8 @@ function sendAction(cmd, amount){
 
 //////////////// PIXI APPLICATION ///////////////////
 let app = new Application({
-        width: 800,
-        height: 600,
+        width: 1280,
+        height: 800,
         antialiasing: true,
         transparent: false,
         resolution: 1
@@ -216,13 +252,30 @@ PIXI.loader
 //This `setup` function will run when the image has loaded
 function setup() {
     console.log('setup() called.');
+
+    // creating a dealer button
+    dealer_button = getDealerSprite();
+    stash.addChild(dealer_button);
+
+    // creating highlighter object for active player
+    highlighter = newHighlighter();
+
+    // animate active player
+    app.ticker.add(() => {
+        highlighter_count += 2*(1/60)*Math.PI;
+        highlighter.tint = 0xffffff*Math.abs(Math.cos(highlighter_count)) ;
+    });
+
+
     drawTable();
+    drawStatusContainer();
     createSeatsContainers();
    //Set the game state
     state = play;
 
     //Start the game loop
     app.ticker.add(delta => gameLoop(delta));
+
 }
 
 
@@ -234,11 +287,13 @@ function play(delta) {
     //console.log('in play loop...')
 }
 
+function newHand(){
 
-//////////////////////////////////////////////////////////////////////////////
+}
+
 // seats is positioned container. it has absolute position on the table
 function createSeatsContainers() {
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < NUMBER_OF_PLAYERS; i++) {
         seats[i] = new PIXI.Container();
         seats[i].name = "seat-" + i;
         seats[i].position.set(PLAYER[i].position.x, PLAYER[i].position.y);
@@ -262,10 +317,10 @@ function addRect(container) {
 // find my own player data to bind to seat[0]
 function updateMySeat(data){
     for (let i=0; i<Object.keys(data).length; i++ ){
-        console.log ("checking " + data[i].name);
+        //console.log ("checking " + data[i].name);
         if (data[i].name === player.name){
             my_pid = i;
-            console.log ("my player id: " + my_pid);
+            console.debug("my player id: %d will seat at seat[0].", my_pid);
             return;
         }
     }
@@ -281,41 +336,179 @@ function seatOf(realPlayerIndex){
     if (visualSeatId < 0){
         visualSeatId += numOfPlayers;
     }
-    console.log("real=%d, visual=%d", realPlayerIndex, visualSeatId);
+    //console.debug("real=%d, visual=%d", realPlayerIndex, visualSeatId);
     return visualSeatId;
 }
-
 
 // create visual shifted containers for each players and add to seats[]
 function updateFull(data){
     // {"0":{"logger":{"name":"com.kukinet.pkr.Player"},"name":"eee","chips":10000,"commited":0,"isChecking":false,"position":0,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},"1":{"logger":{"name":"com.kukinet.pkr.Player"},"name":"fff","chips":10000,"commited":0,"isChecking":false,"position":1,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},"2":{"logger":{"name":"com.kukinet.pkr.Player"},"name":"iii","chips":10000,"commited":0,"isChecking":false,"position":2,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},"3":{"logger":{"name":"com.kukinet.pkr.Player"},"name":"ddd","chips":10000,"commited":0,"isChecking":false,"position":3,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"}}
-    console.log(data);
-    console.log("" + data);
+    //console.debug(data);
     let numOfPlayers = Object.keys(data).length;
-    console.log("numOfPlayers=" +numOfPlayers);
+    //console.debug("numOfPlayers=" +numOfPlayers);
     for (let i=0; i<numOfPlayers; i++){
         // s will hold the actual seat number for this player
         // this will let player at data[2] (i=2) to seat in seat[0] (s=0)
         let s = seatOf(i);
         let p = data[Object.keys(data)[i]];
-        console.log("seating %s from data[%d] at seat[%d].", p.name, i, s);
+        //console.debug("seating %s from data[%d] at seat[%d].", p.name, i, s);
         let pc = newPlayerContainer(s, 'images/avatars/girl1.jpeg', p.name, p.chips, p.commited, p.strHole1, p.strHole2);
         seats[s].addChild(pc)
     }
 }
 
+function updateStatusMessages(data) {
+    // {"type":"status","value":"new hand # 1"}
+    // {"type":"status","value":"iii call 60."}
+    if (data.type !== 'status') return -1;
+    // add message to ctx
+    addStatusMessage(statusMessages, data.value);
+    // and show last N messages
+    let messagesSprite = app.stage
+                .getChildByName('sc')
+                .getChildByName('messages');
+    showStatusMessages(statusMessages, messagesSprite);
+}
+
+function moveDealerButton(data) {
+    // server: {"sbPosition":0,"bbPosition":1,"dealerPosition":3}
+    if (data.dealerPosition !== undefined){
+        let dealerSeat = seatOf(data.dealerPosition);
+        //console.debug("dealer button at seat: %d.", dealerSeat);
+        // remove old dealer button
+        let numOfPlayers = seats.length;
+        console.log("numOfPlayers=" +numOfPlayers);
+        for (let i=0; i<numOfPlayers; i++){
+            if (dealerSeat === i){
+            let dbc = seats[i].getChildByName('pc')
+                              .getChildByName('dbc');
+                console.log(" dealer at seat %s", dealerSeat);
+                dbc.addChild(dealer_button);
+            }
+        }
+    } else {
+        console.log(data);
+        console.log("err in dealer button move");
+        return -1;
+    }
+}
+
+function removeAllHoleCards(){
+    for (let i=0; i<seats.length; i++){
+        let pc = seats[i].getChildByName('pc');
+        if (pc !== null){
+            let hcc = pc.getChildByName('hcc');
+            if (hcc !== null){
+                removeHoleCards(hcc);
+            }else{
+                console.warn('should not be here hcc should be defined when pc exists')
+            }
+
+        } else {
+            console.log('no pc for seat %d', i)
+        }
+    }
+}
+
 function updatePlayerMove(data){
-    // {"type":"playermove","seat":0,"player":{"logger":{"name":"com.kukinet.pkr.Player"},"name":"eee","chips":9970,"commited":30,"isChecking":false,"position":0,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},"command":"sb","value":30,"pot":30}
+    // {"type":"playermove","seat":0,"player":{"name":"eee","chips":9970,"commited":30,"isChecking":false,"position":0,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},"command":"sb","value":30,"pot":30}
     if (data.type !== 'playermove') return -1;
-    let pc = seats[data.seat].getChildByName('pc');
+    let seat = seatOf(data.seat);
+    updatePlayerChips(seat, data.player.chips);
+    updatePlayerBet(seat, data.player.commited);
+    updatePot(data.pot);
+    if (data.command === 'fold'){
+        foldPlayer(seat);
+    }
+    // server: {"type":"playermove","seat":0,"player":{"name":"eee","chips":9970,
+    // "commited":30,"isChecking":false,"position":0,"inGame":true,
+    // "inHand":true,"strHole1":"XX","strHole2":"XX"},"command":"sb","value":30,"pot":30}
+
+}
+
+// attach click handlers
+function addActionButtonHandlers(){
+    console.debug('addActionButtonHandlers() called.');
+    app.stage.getChildByName('abc')
+        .getChildByName('fold').click = function() {
+        console.log("fold button clicked.");
+        foldPlayer(mySeat()); // fold me immediately
+        sendAction("fold", 0);
+        removeActionButtons();
+    };
+    app.stage.getChildByName('abc')
+        .getChildByName('call').click = function() {
+        console.log("call button clicked.");
+        call(mySeat()); // fold me immediately
+        sendAction("fold", 0);
+        removeActionButtons();
+    };
+
+
+
+}
+
+function foldPlayer(seat){
+    console.log("foldPlayer(%d) called", seat);
+    let hcc = seats[seat].getChildByName('pc')
+                         .getChildByName('hcc');
+    removeHoleCards(hcc);
+}
+
+function mySeat(){
+    for (let i=0; i<seats.length; i++){
+        let name = seats[i]
+            .getChildByName('pc')
+            .getChildByName('ncc')
+            .getChildByName('namerect')
+            .getChildByName('name').text
+        if (name === player.name){
+            return i;
+        }
+    }
+
+}
+
+
+
+function updatePlayerChips(seat, amount){
+    console.debug("updatePlayerChips(%d,%d) called", seat, amount)
+    let pc = seats[seat].getChildByName('pc');
     pc.getChildByName('ncc')
         .getChildByName('chipsrect')
-        .getChildByName('chips').text = data.player.chips;
-    // let commited = newChipsContainer(data.player.commited);
-    let commited = newChipsContainer(data.player.commited);
-    let bet = pc.getChildByName('bet');
-    commited.position.set(0, 0);
-    bet.addChild(commited);
+        .getChildByName('chips').text = amount;
+}
+
+
+function clearAllPlayersBets(){
+    for (let i=0; i<seats.length; i++){
+        let bc = seats[i]
+            .getChildByName('pc')
+            .getChildByName('bc');
+        let bet = bc.getChildByName('bet');
+        if ( bet !== undefined ) {
+            console.debug('clearing bet from seat %d.', i);
+            bc.removeChild(bet)
+        }
+    }
+}
+
+
+function updatePlayerBet(seat, amount){
+    let bc = seats[seat].getChildByName('pc')
+                        .getChildByName('bc');
+    // remove old container if exists
+    let oldc = bc.getChildByName('bet');
+    //console.log('bc is');
+    //console.log(bc);
+
+    if ( oldc !== undefined ) {
+        console.debug('removing old bet.');
+        bc.removeChild(oldc)
+    }
+    let bet = newBetContainer(amount);
+    // bet.name = 'bet';
+    bc.addChild(bet);
 }
 
 function updateCommunityCards(data){
@@ -323,8 +516,8 @@ function updateCommunityCards(data){
     if (data.type !== 'community') return -1;
     // let tc = app.stage.getChildByName('tc').getChildByName('table');
     let tc = app.stage.getChildByName('tc');
-    // remove old container
-    tc.removeChild(tc.getChildByName('ccc'));
+    // // remove old container
+    // tc.removeChild(tc.getChildByName('ccc'));
     let ccc = newCommunityCardsContainer(data);
     ccc.position.set(TABLE.ccc.x, TABLE.ccc.y);
     tc.addChild(ccc);
@@ -335,9 +528,12 @@ function updateMyHoleCards(data) {
     // {"type":"cards","seat":3,"card1":"5c","card2":"9c"}
     if (data.type !== 'cards') return -1;
     if (data.card2 !== undefined){
-        let hcc = seats[seatOf(data.seat)].getChildByName('pc')
+        let hcc = seats[seatOf(data.seat)]
+            .getChildByName('pc')
             .getChildByName('hcc');
-        drawHoleCards(data.card1 ,data.card2, hcc);
+        removeHoleCards(hcc);
+        addHoleCards(data.card1 ,data.card2, hcc);
+
     }
 }
 
@@ -350,6 +546,59 @@ function updatePot(amount){
     tc.addChild(pot);
 }
 
+// function waitingPlayerMove(data) {
+//     // {"type":"waitaction","player":"p5","options":["fold","call","raise","allin"],"optionAmounts":{"call":30,"max_raise":9970,"min_raise":120,"allin":9970}}
+//     if (data.type !== 'waitaction') return -1;
+//     highLightPlayer(data);
+//
+// }
+
+function RemovePlayerHighlight(){
+        // adding to stash will remove from UI
+        stash.addChild(highlighter);
+}
+
+function highLightPlayer(data) {
+    // {"type":"waitaction","player":"p5","options":["fold","call","raise","allin"],"optionAmounts":{"call":30,"max_raise":9970,"min_raise":120,"allin":9970}}
+    if (data.type !== 'waitaction') return -1;
+    console.debug('waitaction received ( waiting for %s to play.)', data.player);
+    for (let i = 0; i < seats.length; i++) {
+        let pc = seats[i].getChildByName('pc');
+        let name = pc.getChildByName('ncc')
+            .getChildByName('namerect')
+            .getChildByName('name');
+        //console.log('name.text=' + name.text);
+        if (name.text === data.player) {
+            console.debug('highlighting active player at seat ' + i);
+            // highlight this seat
+            let bg = pc.getChildByName('hcc')
+                .getChildByName('bg');
+            bg.addChild(highlighter);
+        }
+    }
+}
+
+function addStatusMessage(status_array, message){
+    status_array.push(message);
+}
+
+function showStatusMessages(status_array, sprite){
+    //console.log(sprite);
+    //console.log(status_array);
+    // reset text
+    sprite.text = '\n';
+    // all messages can appear
+    if (status_array.length <= STATUS.messages){
+        for (let n=0; n<status_array.length; n++){
+            sprite.text += status_array[n] + "\n";
+        }
+    } else {
+        // more than N messages, extracting last N messages
+        for (let n=status_array.length-STATUS.messages; n<status_array.length; n++){
+            sprite.text += status_array[n] + "\n";
+        }
+    }
+}
 
 
 // EXAMPLES:

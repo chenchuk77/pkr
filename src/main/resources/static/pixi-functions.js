@@ -29,30 +29,31 @@ function setStausMessageSprite(message){
     statusMessage.y = 550;
 
     //return statusMessage;
-
 }
-
 
 function getCardSprite(cardCode) {
     let cc = new PIXI.Container();
-    console.log("getCardSprite called. with " + cardCode);
-    console.log(cardCode);
+    //console.log("getCardSprite called. with " + cardCode);
+    //console.log(cardCode);
+    // card background
+    let cardBg = new PIXI.Graphics();
+    cardBg.lineStyle(1, 0xeefffc, 1);
+    cardBg.beginFill(0xeeffcc);
+    cardBg.drawRoundedRect(0, 0,119, 155, 12);
+    cc.addChild(cardBg);
+    // face down card drawn as rect
     if (cardCode === "XX"){
-        let hiddenCard = new Sprite(resources['images/cards/back.svg'].texture);
+        let hiddenCard = new PIXI.Graphics();
+        hiddenCard.lineStyle(1, 0x023363, 1);
+        hiddenCard.beginFill(0x023363);
+        hiddenCard.drawRoundedRect(0, 0,115, 151, 12);
+        hiddenCard.position.set(2, 2);
         cc.addChild(hiddenCard);
         return cc;
     }
-
+    // face up card
     for (let i = 0; i < cards_array.length; i++) {
         if (cards_array[i].code === cardCode) {
-            let cardBg = new PIXI.Graphics();
-            cardBg.lineStyle(1, 0xeefffc, 1);
-            cardBg.beginFill(0xeeffcc);
-            //cardBg.drawRoundedRect(0, 0, (334-90)*TABLE.cards.scale+2, (440-36)*TABLE.cards.scale+2, 140);
-            cardBg.drawRoundedRect(0, 0,119, 155, 12);
-            //cardBg.drawRect(0, 0, 119, 155);
-            //cardBg.position.set(90, 36);
-            cc.addChild(cardBg);
             let card = new Sprite(resources[cards_array[i].file].texture);
             card.position.set(2,2);
             cc.addChild(card);
@@ -105,14 +106,12 @@ function getCallButtonSprite(amount){
 
 function getFoldButtonSprite(){
     let foldButtonSprite = new Sprite(resources['images/buttons_120x40/button_fold.png'].texture);
+    foldButtonSprite.name = 'fold';
     foldButtonSprite.interactive = true;
-    //foldButtonSprite.on('click', sendAction("fold", 0));
-    foldButtonSprite.click = function() {
-        console.log("fold button clicked.");
-        sendAction("fold", 0)
-    };
-    // callButtonSprite.scale.x=0.1;
-    // callButtonSprite.scale.y=0.1;
+    // foldButtonSprite.click = function() {
+    //     console.log("fold button clicked.");
+    //     sendAction("fold", 0);
+    // };
     return foldButtonSprite;
 }
 function getCheckButtonSprite(){
@@ -139,16 +138,21 @@ function getSbSprite() {
 }
 function getDealerSprite() {
     let dealerSprite = new Sprite(resources['images/other/dealerButton.png'].texture);
-    dealerSprite.scale.x=0.1;
-    dealerSprite.scale.y=0.1;
+    dealerSprite.scale.set(0.5, 0.5);
     return dealerSprite;
 }
 
 function drawTable(){
-    console.log('drawTable() called.')
+    console.log('drawTable() called.');
     let table = newTableContainer();
     app.stage.addChild(table);
 }
+function drawStatusContainer(){
+    console.log('drawStatusContainer() called.');
+    let sc = newStatusContainer();
+    app.stage.addChild(sc);
+}
+
 
 function updateTable(data){
     let numOfPlayers = Object.keys(data).length;
@@ -238,75 +242,71 @@ function drawRiver(code){
     app.stage.addChild(riverCard);
 }
 
+function removeActionButtons(){
+    let abc = app.stage.getChildByName('abc');
+    app.stage.removeChild(abc);
+}
 
 function drawActionButtons(data){
     console.log('drawActionButtons() called.');
-    let bc = newActionButtonsContainer(data);
-    app.stage.addChild(bc);
-
-    // if (options.includes("fold")){
-    //     foldButton = getFoldButtonSprite();
-    //     foldButton.x= 100;
-    //     foldButton.y= 450;
-    //     app.stage.addChild(foldButton);
-    // }
-    // if (options.includes("call")) {
-    //     callButton = getCallButtonSprite();
-    //     callButton.x = 250;
-    //     callButton.y = 450;
-    //     app.stage.addChild(callButton);
-    // }
-    // if (options.includes("check")) {
-    //     checkButton = getCheckButtonSprite();
-    //     checkButton.x = 250;
-    //     checkButton.y = 500;
-    //     app.stage.addChild(checkButton);
-    // }
-    // if (options.includes("bet")) {
-    //     betButton = getBetButtonSprite();
-    //     betButton.x = 400;
-    //     betButton.y = 450;
-    //     app.stage.addChild(betButton);
-    // }
-    // if (options.includes("raise")) {
-    //     raiseButton = getRaiseButtonSprite();
-    //     raiseButton.x = 400;
-    //     raiseButton.y = 500;
-    //     app.stage.addChild(raiseButton);
-    // }
-
+    let abc = newActionButtonsContainer(data);
+    app.stage.addChild(abc);
 }
 
 
-function drawButtons(buttons){
-    console.log('drawButtons() called.');
-    sb_seat = buttons.sbPosition;
-    sb_sprite = getSbSprite();
-    sb_sprite.x = buttonsPosition[sb_seat].x;
-    sb_sprite.y = buttonsPosition[sb_seat].y;
-
-    bb_seat = buttons.bbPosition;
-    bb_sprite = getBbSprite();
-    bb_sprite.x = buttonsPosition[bb_seat].x;
-    bb_sprite.y = buttonsPosition[bb_seat].y;
-
-    dealer_seat = buttons.dealerPosition;
-    dealer_sprite = getDealerSprite();
-    dealer_sprite.x = buttonsPosition[dealer_seat].x;
-    dealer_sprite.y = buttonsPosition[dealer_seat].y;
-
-    app.stage.addChild(sb_sprite);
-    app.stage.addChild(bb_sprite);
-    app.stage.addChild(dealer_sprite);
-}
+// function drawButtons(buttons){
+//     console.log('drawButtons() called.');
+//     sb_seat = buttons.sbPosition;
+//     sb_sprite = getSbSprite();
+//     sb_sprite.x = buttonsPosition[sb_seat].x;
+//     sb_sprite.y = buttonsPosition[sb_seat].y;
+//
+//     bb_seat = buttons.bbPosition;
+//     bb_sprite = getBbSprite();
+//     bb_sprite.x = buttonsPosition[bb_seat].x;
+//     bb_sprite.y = buttonsPosition[bb_seat].y;
+//
+//     dealer_seat = buttons.dealerPosition;
+//     dealer_sprite = getDealerSprite();
+//     dealer_sprite.x = buttonsPosition[dealer_seat].x;
+//     dealer_sprite.y = buttonsPosition[dealer_seat].y;
+//
+//     app.stage.addChild(sb_sprite);
+//     app.stage.addChild(bb_sprite);
+//     app.stage.addChild(dealer_sprite);
+// }
 
 
 function drawBets(amount, seat_id){
 
 }
 
+function removeHoleCards(container){
+    //console.log("removeHoleCards() called with %s", container.name);
+    //console.log(container);
+
+    //console.log("container got children.");
+    //console.log(container.children);
+
+    let bg = container.getChildByName('bg');
+    container.removeChild(bg);
+    let hole1 = container.getChildByName('hole1');
+    container.removeChild(hole1);
+    let hole2 = container.getChildByName('hole2');
+    container.removeChild(hole2);
+
+    //console.log("container got children.");
+    //console.log(container.children);
+    //console.log("removeHoleCards() return");
+
+}
+
 // drawing cards of specific seat
-function drawHoleCards(code1, code2, container){
+function addHoleCards(code1, code2, container){
+    // container for highlighter
+    let bg = new PIXI.Graphics();
+    bg.name = 'bg';
+    container.addChild(bg);
     let hole1 = getCardSprite(code1);
     hole1.name = 'hole1';
     hole1.position.set(0,0);
@@ -320,12 +320,14 @@ function drawHoleCards(code1, code2, container){
     hole2.scale.y = TABLE.cards.scale;
     container.addChild(hole2);
 }
-function clearHoleCards(container){
-    let hole1 = container.getChildByName('hole1');
-    let hole2 = container.getChildByName('hole2');
-    container.removeChild(hole1);
-    container.removeChild(hole2);
-}
+// function clearHoleCards(container){
+//     let bg = container.getChildByName('bg');
+//     let hole1 = container.getChildByName('hole1');
+//     let hole2 = container.getChildByName('hole2');
+//     container.removeChild(bg);
+//     container.removeChild(hole1);
+//     container.removeChild(hole2);
+// }
 
 
 
@@ -342,41 +344,41 @@ function drawCards(code1, code2, seat_id){
     app.stage.addChild(card2);
 }
 
-// drawing status message (update message)
-function drawStatusMessage(message) {
-    console.log('drawStatusMessage() called. with message: ' + message);
-    //statusMessage.text = message;
-    //app.stage.removeChild(statusMessage);
-    // app.renderer.render(app.stage);
-    // statusMessage.destroy();
-    //if app.stage.contains()
-
-    //statusMessage = getStausMessageSprite(message);
-    setStausMessageSprite(message);
-    console.log(statusMessage);
-    console.log(typeof(statusMessage));
-    console.log(statusMessage.isSprite);
-
-    console.log("********STATUS MESSAGE = " + statusMessage);
-    app.stage.addChild(statusMessage);
-    // app.renderer.render(app.stage);
-
-    // var style = {
-    //     font: 'bold italic 36px Arial',
-    //     fill: '#F7EDCA',
-    //     stroke: '#4a1850',
-    //     strokeThickness: 5,
-    //     dropShadow: true,
-    //     dropShadowColor: '#000000',
-    //     dropShadowAngle: Math.PI / 6,
-    //     dropShadowDistance: 6,
-    //     wordWrap: true,
-    //     wordWrapWidth: 440
-    // };
-    //
-    // statusMessage = new PIXI.Text(message.value, style);
-    // statusMessage.x = 30;
-    // statusMessage.y = 180;
-    //
-
-}
+// // drawing status message (update message)
+// function drawStatusMessage(message) {
+//     console.log('drawStatusMessage() called. with message: ' + message);
+//     //statusMessage.text = message;
+//     //app.stage.removeChild(statusMessage);
+//     // app.renderer.render(app.stage);
+//     // statusMessage.destroy();
+//     //if app.stage.contains()
+//
+//     //statusMessage = getStausMessageSprite(message);
+//     setStausMessageSprite(message);
+//     console.log(statusMessage);
+//     console.log(typeof(statusMessage));
+//     console.log(statusMessage.isSprite);
+//
+//     console.log("********STATUS MESSAGE = " + statusMessage);
+//     app.stage.addChild(statusMessage);
+//     // app.renderer.render(app.stage);
+//
+//     // var style = {
+//     //     font: 'bold italic 36px Arial',
+//     //     fill: '#F7EDCA',
+//     //     stroke: '#4a1850',
+//     //     strokeThickness: 5,
+//     //     dropShadow: true,
+//     //     dropShadowColor: '#000000',
+//     //     dropShadowAngle: Math.PI / 6,
+//     //     dropShadowDistance: 6,
+//     //     wordWrap: true,
+//     //     wordWrapWidth: 440
+//     // };
+//     //
+//     // statusMessage = new PIXI.Text(message.value, style);
+//     // statusMessage.x = 30;
+//     // statusMessage.y = 180;
+//     //
+//
+// }

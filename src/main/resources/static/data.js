@@ -3,54 +3,68 @@
 * */
 
 // constants
-let pocketCardPosition =[
-    {x: 100, y:250},
-    {x: 200, y:300},
-    {x: 300, y:300},
-    {x: 400, y:250}
-];
-let betsPosition =[
-    {x: 120, y:200},
-    {x: 220, y:250},
-    {x: 320, y:250},
-    {x: 420, y:200}
-];
-let buttonsPosition =[
-    {x: 80, y:200},
-    {x: 180, y:250},
-    {x: 280, y:250},
-    {x: 380, y:200}
-];
+// let pocketCardPosition =[
+//     {x: 100, y:250},
+//     {x: 200, y:300},
+//     {x: 300, y:300},
+//     {x: 400, y:250}
+// ];
+// let betsPosition =[
+//     {x: 120, y:200},
+//     {x: 220, y:250},
+//     {x: 320, y:250},
+//     {x: 420, y:200}
+// ];
+// let buttonsPosition =[
+//     {x: 80, y:200},
+//     {x: 180, y:250},
+//     {x: 280, y:250},
+//     {x: 380, y:200}
+// ];
+//
+// let actionButtonsPosition =[
+//     {x: 100, y:600},
+//     {x: 350, y:600},
+//     {x: 500, y:600},
+//     {x: 650, y:600}
+// ];
 
-let actionButtonsPosition =[
-    {x: 100, y:600},
-    {x: 350, y:600},
-    {x: 500, y:600},
-    {x: 650, y:600}
-];
+// const NUMBER_OF_PLAYERS=9;
+const NUMBER_OF_PLAYERS=4;
 
-const BUTTONS = {
-    abc:   {x: 200, y: 500},
-    fold:  {x: 0, y: 0},
-    check: {x: 150, y: 0},
-    call:  {x: 0, y: 50},
-    bet:   {x: 150, y: 50},
-    raise: {x: 150, y: 50}
-};
-
-// dealer container positions ( for cards, deck, pot )
+// table container positions ( for table, cards, deck, pot )
 const TABLE = {
+    position:   {x: 200, y: 120},
+    size:       {x: 900, y: 400},
     cards:      {scale: 0.4},
     //cards:      {scale: 1},
-    ccc:        {x: 200, y: 150},
+    ccc:        {x: 500, y: 300},
     deck:       {x: 180, y: 130},
     flop1:      {x: 100, y: 0},
     flop2:      {x: 230, y: 0},
     flop3:      {x: 360, y: 0},
-    turn:       {x: 500, y: 0},
-    river:      {x: 660, y: 0},
-    pot:        {x: 160, y: 180}
+    turn:       {x: 520, y: 0},
+    river:      {x: 680, y: 0},
+    pot:        {x: 250, y: 120}
 };
+
+const BUTTONS = {
+    position:   {x: 880, y: 600},
+    // abc:   {x: 500, y: 600},
+    fold:  {x: 30, y: 30},
+    check: {x: 180, y: 30},
+    call:  {x: 30, y: 80},
+    bet:   {x: 180, y: 80},
+    raise: {x: 180, y: 80}
+};
+
+
+// status container
+const STATUS = {
+    position: {x: 0, y: 600},
+    cards: {scale: 0.4},
+    messages: 8}
+;
 
 // positions inside containers
 const PLAYER = {
@@ -58,11 +72,11 @@ const PLAYER = {
         bet:        {x: 0, y: -32},
         ac:         {x: 0, y: 0},
         hcc:        {x: -12, y: 0},
-        bc:         {x: 0, y: 0},
-        dbc:        {x: 30, y: -10},
+        bc:         {x: 60, y: -95},
+        dbc:        {x: 0, y: -95},
         midrect:    {x: 0, y: 32},
         ncc:        {x: 0, y: 64},
-        position:   {x: 350, y: 350},
+        position:   {x: 600, y: 470},
         size:       {x: 80, y:40},
         name:       {x: 0, y:40},
         chips:      {x: 0, y:60},
@@ -73,11 +87,11 @@ const PLAYER = {
         bet:        {x: 0, y: -32},
         ac:         {x: 0, y: 0},
         hcc:        {x: -12, y: 0},
-        bc:         {x: 0, y: 0},
-        dbc:        {x: 30, y: -10},
+        bc:         {x: 60, y: -95},
+        dbc:        {x: 0, y: -95},
         midrect:    {x: 0, y: 32},
         ncc:        {x: 0, y: 64},
-        position:   {x: 200, y: 350},
+        position:   {x: 400, y: 470},
         size:       {x: 40, y:80},
         name:       {x: 0, y:40},
         chips:      {x: 0, y:60},
@@ -88,11 +102,11 @@ const PLAYER = {
         bet:        {x: 32, y: 0},
         ac:         {x: 0, y: 0},
         hcc:        {x: -12, y: 0},
-        bc:         {x: 0, y: 0},
-        dbc:        {x: 75, y: 60},
+        bc:         {x: 80, y: -80},
+        dbc:        {x: 80, y: -20},
         midrect:    {x: -32, y: 0},
         ncc:        {x: -64, y: 0},
-        position:   {x: 50, y: 200},
+        position:   {x: 170, y: 260},
         size:       {x: 80, y:40},
         name:       {x: 0, y:0},
         chips:      {x: 0, y:20},
@@ -103,11 +117,11 @@ const PLAYER = {
         bet:        {x: 0, y: 32},
         ac:         {x: 0, y: 0},
         hcc:        {x: -12, y: 0},
-        bc:         {x: 0, y: 0},
-        dbc:        {x: 15, y: 75},
+        bc:         {x: 60, y: 20},
+        dbc:        {x: 0, y: 20},
         midrect:    {x: 0, y: -32},
         ncc:        {x: 0, y: -64},
-        position:   {x: 100, y: 50},
+        position:   {x: 300, y: 70},
         size:       {x: 40, y:80},
         name:       {x: 0, y:0},
         chips:      {x: 0, y:20},
@@ -118,11 +132,11 @@ const PLAYER = {
         bet:        {x: 0, y: 32},
         ac:         {x: 0, y: 0},
         hcc:        {x: -12, y: 0},
-        bc:         {x: 0, y: 0},
-        dbc:        {x: 15, y: 75},
+        bc:         {x: 60, y: 20},
+        dbc:        {x: 0, y: 20},
         midrect:    {x: 0, y: -32},
         ncc:        {x: 0, y: -64},
-        position:   {x: 250, y: 50},
+        position:   {x: 500, y: 70},
         size:       {x: 40, y:80},
         name:       {x: 0, y:0},
         chips:      {x: 0, y:20},
@@ -133,11 +147,11 @@ const PLAYER = {
         bet:        {x: 0, y: 32},
         ac:         {x: 0, y: 0},
         hcc:        {x: -12, y: 0},
-        bc:         {x: 0, y: 0},
-        dbc:        {x: 15, y: 75},
+        bc:         {x: 60, y: 20},
+        dbc:        {x: 0, y: 20},
         midrect:    {x: 0, y: -32},
         ncc:        {x: 0, y: -64},
-        position:   {x: 400, y: 50},
+        position:   {x: 700, y: 70},
         size:       {x: 40, y:80},
         name:       {x: 0, y:0},
         chips:      {x: 0, y:20},
@@ -148,11 +162,11 @@ const PLAYER = {
         bet:        {x: 0, y: 32},
         ac:         {x: 0, y: 0},
         hcc:        {x: -12, y: 0},
-        bc:         {x: 0, y: 0},
-        dbc:        {x: 15, y: 75},
+        bc:         {x: 60, y: 20},
+        dbc:        {x: 0, y: 20},
         midrect:    {x: 0, y: -32},
         ncc:        {x: 0, y: -64},
-        position:   {x: 550, y: 50},
+        position:   {x: 900, y: 70},
         size:       {x: 40, y:80},
         name:       {x: 0, y:0},
         chips:      {x: 0, y:20},
@@ -163,11 +177,11 @@ const PLAYER = {
         bet:        {x: -32, y: 0},
         ac:         {x: 0, y: 0},
         hcc:        {x: -12, y: 0},
-        bc:         {x: 0, y: 0},
-        dbc:        {x: -10, y: 60},
+        bc:         {x: -70, y: -40},
+        dbc:        {x: -70, y: 20},
         midrect:    {x: 32, y: 0},
         ncc:        {x: 64, y: 0},
-        position:   {x: 650, y: 200},
+        position:   {x: 1065, y: 300},
         size:       {x: 80, y:40},
         name:       {x: 40, y:0},
         chips:      {x: 40, y:20},
@@ -178,17 +192,34 @@ const PLAYER = {
         bet:        {x: 0, y: -32},
         ac:         {x: 0, y: 0},
         hcc:        {x: -12, y: 0},
-        bc:         {x: 0, y: 0},
-        dbc:        {x: 30, y: -10},
+        bc:         {x: 60, y: -95},
+        dbc:        {x: 0, y: -95},
         midrect:    {x: 0, y: 32},
         ncc:        {x: 0, y: 64},
-        position:   {x: 500, y: 350},
+        position:   {x: 800, y: 470},
         size:       {x: 40, y:80},
         name:       {x: 1, y:1},
         chips:      {x: 1, y:1},
         avatar:     {x: 0, y:0},
         avatar_cards:    {x: 1, y:1},
         committed: {x: 1, y:1}}};
+
+
+const ACTION_SHOW_SECONDS = 3;
+
+const NAME_STYLE = {
+    dropShadowColor: "#9e6262",
+    fill: [
+        "#2daa46",
+        "#69e2dc"
+    ],
+    fontFamily: "Impact, Charcoal, sans-serif",
+    fontSize: 20,
+    padding: 1
+
+};
+// const STYLE_NAME = new PIXI.TextStyle();
+
 
 
 // }
@@ -249,7 +280,8 @@ let cards_array = [
     { code: 'Qd', file: 'images/cards/Qd.svg'},
     { code: 'Qh', file: 'images/cards/Qh.svg'},
     { code: 'Qs', file: 'images/cards/Qs.svg'},
-    { code: '00', file: 'images/cards/back.svg'}
+    //{ code: '00', file: 'images/cards/back.svg'}
+    { code: '00', file: 'images/cards/back-blue.png'}
 ];
 
 // for PIXI loader, to load all images

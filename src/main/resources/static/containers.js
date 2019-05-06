@@ -54,20 +54,31 @@ function newPlayerContainer(i, avatar, name, chips, commited, card1, card2, x, y
     // hole cards container
     let hcc = new PIXI.Container();
     hcc.name = 'hcc';
+    // let bg = new PIXI.Graphics();
+    // bg.name = 'bg';
+    // hcc.addChild(bg);
     hcc.position.set(PLAYER[i].hcc.x, PLAYER[i].hcc.y);
     pc.addChild(hcc);
-    drawHoleCards(card1, card2, hcc);
+    addHoleCards(card1, card2, hcc);
+
+
 
     // name and chips container
     let ncc = new PIXI.Container();
     ncc.name = 'ncc';
     let nameRect = new PIXI.Graphics();
+    nameRect.name = 'namerect';
     nameRect.lineStyle(1, 0x44e300, 1);
     nameRect.beginFill(0x808080);
     nameRect.drawRect(0, 0, 64, 32);
     //nameRect.endFill();
-    let nameText = new PIXI.Text(name, {font: '14px Arial Bold', fill: '#FFFFFF'});
-    // nameText.anchor.set(32, 16);
+    //let nameText = new PIXI.Text(name, {font: '14px Arial Bold', fill: '#FFFFFF'});
+    let nameText = new PIXI.Text(name, new PIXI.TextStyle(NAME_STYLE));
+
+
+
+    nameText.name = 'name';
+// nameText.anchor.set(32, 16);
     nameRect.addChild(nameText);
     nameRect.position.set(0, 0);
     //pc1.addChild(nameRect);
@@ -78,7 +89,8 @@ function newPlayerContainer(i, avatar, name, chips, commited, card1, card2, x, y
     chipsRect.beginFill(0x808080);
     chipsRect.drawRect(0, 0, 64, 32);
     // chipsRect.endFill();
-    let chipsText = new PIXI.Text(chips, {font: '14px Arial', fill: '#FFFFFF'});
+    // let chipsText = new PIXI.Text(chips, {font: '14px Arial', fill: '#FFFFFF'});
+    let chipsText = new PIXI.Text(chips, new PIXI.TextStyle(NAME_STYLE));
     chipsText.name = 'chips';
     // chipsText.anchor.set(96, 48);
     chipsRect.addChild(chipsText);
@@ -106,7 +118,6 @@ function newPlayerContainer(i, avatar, name, chips, commited, card1, card2, x, y
     return pc;
 
 }
-
 // returns a new container with chips graphic
 function newChipsContainer(amount){
     let reminder = amount;
@@ -196,26 +207,72 @@ function newChipsContainer(amount){
     chips_ctr.addChild(topChip);
 
     // add amount in text neat chips
-    let amountText = new PIXI.Text(amount, {font: '38px Arial', fill: '#FFFFFF'});
-    amountText.position.set(90, 130);
+    let amountText = new PIXI.Text(amount, {font: '24px Arial', fill: '#FFFFFF'});
+    amountText.position.set(10, 160);
     chips_ctr.addChild(amountText);
     return chips_ctr;
 }
-
-
+function newHighlighter(){
+    let colorMatrix = [
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1];
+    let f = new PIXI.filters.ColorMatrixFilter();
+    f.matrix = colorMatrix;
+    let highlighter = new PIXI.Graphics();
+    highlighter.name = 'highlighter';
+    highlighter.beginFill(0xe4afe2);
+    highlighter.drawRect(0, 0, 80, 80);
+    highlighter.position.set(5, -5 + 64);
+    highlighter.lineStyle(1);
+    highlighter.filters = [f];
+    return highlighter;
+}
 function newPotContainer(amount){
     let potc = newChipsContainer(amount);
     potc.position.set(TABLE.pot.x, TABLE.pot.y);
     potc.name = 'pot';
+    let potValue = new PIXI.Text("Total pot", {font: 'bold 24px Arial',
+        fill: '#F7EDCA',});
+    potValue.position.set(20, 1300);
+    potc.addChild(potValue);
     return potc;
 }
 function newBetContainer(amount){
-    let betc = newChipsContainer(amount);
+    let betc;
+    if (amount > 0){
+        betc = newChipsContainer(amount);
+    } else {
+        betc = new PIXI.Container();
+    }
     betc.name = 'bet';
     return betc;
 }
+function newStatusContainer() {
+    // table container (pot, deck, commcards)
+    let sc = new PIXI.Container();
+    sc.name = 'sc';
+    let temprect = new PIXI.Graphics();
+    temprect.lineStyle(2, 0xF7DC6F, 1);
+    temprect.name = 'temp';
+    temprect.beginFill(0x273746);
+    temprect.drawRect(0, 0, 380, 180);
+    temprect.position.set(10, 10);
+    sc.addChild(temprect);
+    let messages = new PIXI.Text('',  {
+        "fill": "white",
+        "fontFamily": "Georgia",
+        "fontSize": 18
+    });
+    messages.name = 'messages';
+    messages.position.set(20, 2);
 
+    sc.addChild(messages);
+    sc.position.set(STATUS.position.x, STATUS.position.y);
+    return sc;
 
+}
 function newTableContainer(){
     // table container (pot, deck, commcards)
     let tc = new PIXI.Container();
@@ -225,10 +282,10 @@ function newTableContainer(){
     table.lineStyle(4, 0x99CCFF, 1);
     table.name = 'table';
     table.beginFill(0x003333);
-    table.drawRoundedRect(0, 0, 600, 300, 140);
+    // table.drawRoundedRect(0, 0, 600, 300, 140);
+    table.drawRoundedRect(0, 0, 900, 400, 175);
     table.endFill();
-    table.x = 50;
-    table.y = 50;
+    table.position.set(TABLE.position.x, TABLE.position.y);
     tc.addChild(table);
 
     let deck = newDeck();
@@ -240,12 +297,18 @@ function newTableContainer(){
     return tc;
 
 }
-
 function newActionButtonsContainer(data){
     // {"type":"waitaction", "player":"fff", "options":["fold","raise","allin","check"], "optionAmounts":{"max_raise":9940,"min_raise":120,"allin":9940}}
     let abc = new PIXI.Container();
     abc.name = "abc";
-    abc.position.set(BUTTONS.abc.x, BUTTONS.abc.y);
+    let bg = new PIXI.Graphics();
+    bg.lineStyle(2, 0xF7DC6F, 1);
+    bg.name = 'bg';
+    bg.beginFill(0x273746);
+    bg.drawRect(0, 0, 380, 180);
+    bg.position.set(10, 10);
+    abc.addChild(bg);
+    abc.position.set(BUTTONS.position.x, BUTTONS.position.y);
 
     if (data.options.includes("fold")){
         let fold = getFoldButtonSprite();
@@ -276,24 +339,21 @@ function newActionButtonsContainer(data){
     return abc;
 
 }
-
 function newDeck() {
-    let deck = new Sprite(resources['images/cards/back.svg'].texture);
-    deck.position.set(0, 0);
+    //let deck = new Sprite(resources['images/cards/back.svg'].texture);
+    let deck = getCardSprite('XX');
+    // deck.position.set(0, 0);
     deck.scale.x = TABLE.cards.scale;
     deck.scale.y = TABLE.cards.scale;
     deck.position.set(TABLE.deck.x, TABLE.deck.y);
     return deck;
 }
-
 // returns a new container for community cards (f1,f2,f3,t,r)
 function newCommunityCardsContainer(data) {
     let ccc = new PIXI.Container();
     ccc.name = "ccc";
-    // flop1, flop2, flop3, turn, river
     ccc.scale.x = TABLE.cards.scale;
     ccc.scale.y = TABLE.cards.scale;
-
 
     if (data.flop1 !== undefined){
         let flop1_card = getCardSprite(data.flop1);
