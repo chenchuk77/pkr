@@ -93,9 +93,21 @@ function setup() {
         "7":{"name":"p7","chips":1900,"commited":900,"isChecking":false,"position":7,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},
         "8":{"name":"p8", "chips":1900,"commited":900,"isChecking":false,"position":8,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"}};
 
+    // 4 PLAYERS
+    // let data={
+    //     "0":{"name":"p0","chips":1000,"commited":150,"isChecking":false,"position":0,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},
+    //     "1":{"name":"p1" ,"chips":2000,"commited":300,"isChecking":false,"position":1,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},
+    //     "2":{"name":"p2","chips":7000,"commited":300,"isChecking":false,"position":2,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},
+    //     "3":{"name":"p3","chips":24000,"commited":0, "isChecking":false,"position":3,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"}};
+
     // first calculate my own seat
     updateMySeat(data);
     updateFull(data);
+    dealHands(data);
+
+
+
+
 
     // testing playermove
     let playre_move_data0 = {"type":"playermove","seat":0,"player":{"name":"p0","chips":1000,"commited":2000,"isChecking":false,"position":1,"inGame":true, "inHand":true,"strHole1":"XX","strHole2":"XX"},"command":"call","value":30,"pot":240};0
@@ -116,6 +128,9 @@ function setup() {
     updatePlayerMove(playre_move_data7);
     let playre_move_data8 = {"type":"playermove","seat":8,"player":{"name":"p8","chips":1800,"commited":2800,"isChecking":false,"position":6,"inGame":true, "inHand":true,"strHole1":"XX","strHole2":"XX"},"command":"call","value":30,"pot":240};
     updatePlayerMove(playre_move_data8);
+
+    let playre_move_data9 = {"type":"playermove","seat":8,"player":{"name":"p8","chips":1800,"commited":2800,"isChecking":false,"position":6,"inGame":true, "inHand":true,"strHole1":"XX","strHole2":"XX"},"command":"fold","value":0,"pot":1240};
+    updatePlayerMove(playre_move_data9);
 
 
     // testing flop
@@ -175,6 +190,10 @@ function play(delta) {
     //console.log('in play loop...')
 }
 
+function newHand(){
+  // TODO: clear state
+    // print new hand message
+}
 
 // seats is positioned container. it has absolute position on the table
 function createSeatsContainers() {
@@ -202,10 +221,10 @@ function addRect(container) {
 // find my own player data to bind to seat[0]
 function updateMySeat(data){
     for (let i=0; i<Object.keys(data).length; i++ ){
-        console.log ("checking " + data[i].name);
+        //console.log ("checking " + data[i].name);
         if (data[i].name === player.name){
             my_pid = i;
-            console.log ("my player id: " + my_pid);
+            console.log("my player id: %d will seat at seat[0].", my_pid);
             return;
         }
     }
@@ -221,29 +240,77 @@ function seatOf(realPlayerIndex){
     if (visualSeatId < 0){
         visualSeatId += numOfPlayers;
     }
-    console.log("real=%d, visual=%d", realPlayerIndex, visualSeatId);
+    //console.debug("real=%d, visual=%d", realPlayerIndex, visualSeatId);
     return visualSeatId;
 }
-
 
 // create visual shifted containers for each players and add to seats[]
 function updateFull(data){
     // {"0":{"logger":{"name":"com.kukinet.pkr.Player"},"name":"eee","chips":10000,"commited":0,"isChecking":false,"position":0,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},"1":{"logger":{"name":"com.kukinet.pkr.Player"},"name":"fff","chips":10000,"commited":0,"isChecking":false,"position":1,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},"2":{"logger":{"name":"com.kukinet.pkr.Player"},"name":"iii","chips":10000,"commited":0,"isChecking":false,"position":2,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},"3":{"logger":{"name":"com.kukinet.pkr.Player"},"name":"ddd","chips":10000,"commited":0,"isChecking":false,"position":3,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"}}
-    console.log(data);
-    console.log("" + data);
+    //console.debug(data);
     let numOfPlayers = Object.keys(data).length;
-    console.log("numOfPlayers=" +numOfPlayers);
+    //console.debug("numOfPlayers=" +numOfPlayers);
     for (let i=0; i<numOfPlayers; i++){
         // s will hold the actual seat number for this player
         // this will let player at data[2] (i=2) to seat in seat[0] (s=0)
         let s = seatOf(i);
         let p = data[Object.keys(data)[i]];
-        console.log("seating %s from data[%d] at seat[%d].", p.name, i, s);
+        //console.debug("seating %s from data[%d] at seat[%d].", p.name, i, s);
         let pc = newPlayerContainer(s, 'images/avatars/girl1.jpeg', p.name, p.chips, p.commited, p.strHole1, p.strHole2);
         seats[s].addChild(pc)
     }
 }
 
+function dealHands(data){
+    let cc = new PIXI.Container();
+    app.stage.addChild(cc);
+    let numOfPlayers = Object.keys(data).length;
+    for (let i = 0; i < numOfPlayers; i++) {
+        let s = seatOf(i);
+        let p = data[Object.keys(data)[i]];
+        if (p.inHand && p.inGame) {
+            // build sprite for card movement
+            let card = new PIXI.Graphics();
+            card.lineStyle(3, 0xeefffc, 3);
+            card.beginFill(0x023363);
+            card.drawRoundedRect(0, 0,115, 151, 12);
+            let border = new PIXI.Graphics();
+            border.lineStyle(3, 0xeefffc, 3);
+            border.beginFill(0xeeffcc);
+            border.drawRoundedRect(0, 0,119, 155, 12);
+            card.position.set(2, 2);
+            border.addChild(card);
+
+            let sprite = PIXI.Sprite.from(border.generateTexture());
+            sprite.scale.set(TABLE.cards.scale);
+            sprite.anchor.set(0.5);
+            cc.addChild(sprite);
+
+            // set timers for both cards for all players
+            setTimeout(function () {
+                console.log('dealing card-1 to seat %d', s);
+                // animate deal card
+                deal(sprite, dealCard1Sound[s],
+                    TABLE.deckCards, PLAYER[s].dealpath, PLAYER[s].position);
+                    let hcc = seats[s].getChildByName('pc')
+                                      .getChildByName('hcc');
+                addHole1('XX', hcc);
+                // deal 2nd hole card (50 px right)
+                setTimeout(function () {
+                    console.log('dealing card-2 to seat %d', s);
+                    deal(sprite, dealCard2Sound[s],
+                        TABLE.deckCards, PLAYER[s].dealpath, PLAYER[s].position2);
+                    let hcc = seats[s].getChildByName('pc')
+                                      .getChildByName('hcc');
+                    addHole2('XX', hcc);
+                }, 100*i + 100*NUMBER_OF_PLAYERS);
+            }, 100*i);
+
+        } else {
+            console.log('skipping seat %d', s);
+        }
+    }
+}
 
 function updateStatusMessages(data) {
     // {"type":"status","value":"new hand # 1"}
@@ -262,8 +329,7 @@ function moveDealerButton(data) {
     // server: {"sbPosition":0,"bbPosition":1,"dealerPosition":3}
     if (data.dealerPosition !== undefined){
         let dealerSeat = seatOf(data.dealerPosition);
-        console.log("data.dealerPosition=" + data.dealerPosition);
-        console.log("dealerSeat=" + dealerSeat);
+        //console.debug("dealer button at seat: %d.", dealerSeat);
         // remove old dealer button
         let numOfPlayers = seats.length;
         console.log("numOfPlayers=" +numOfPlayers);
@@ -282,19 +348,137 @@ function moveDealerButton(data) {
     }
 }
 
+// accepts a container and add a dynamic text that will
+// disappear in few seconds;
+function addActionText(container, text){
+    let ac = new PIXI.Container();
+    ac.name = 'ac';
+    // background
+    let r1 = new PIXI.Graphics();
+    r1.lineStyle(2, 0xF7DC6F, 1);
+    r1.beginFill(0x273746);
+    r1.drawRoundedRect(0, 0, 96, 32, 8);
+    ac.addChild(r1);
+    // text
+    let t1 = new PIXI.Text(text, new PIXI.TextStyle(NAME_STYLE));
+    t1.position.set(16, 6);
+    ac.addChild(t1);
+    // smoothly light and dark then removes itself from the container
+    let x = 0;
+    let countUp = true;
+    app.ticker.add(() => {
+        if (countUp){
+            x += 0.02;
+            if (x > 1 ) countUp = false;
+        } else {
+            x -= 0.01;
+            if (x <= 0 ){
+                container.removeChild(ac);
+                return;
+            }
+        }
+        ac.alpha = x
+    });
+    container.addChild(ac);
+}
+
+function removeAllHoleCards(){
+    for (let i=0; i<seats.length; i++){
+        let pc = seats[i].getChildByName('pc');
+        if (pc !== null){
+            let hcc = pc.getChildByName('hcc');
+            if (hcc !== null){
+                removeHoleCards(hcc);
+            }else{
+                console.warn('should not be here hcc should be defined when pc exists')
+            }
+        } else {
+            console.log('no pc for seat %d', i)
+        }
+    }
+}
+
 function updatePlayerMove(data){
     // {"type":"playermove","seat":0,"player":{"name":"eee","chips":9970,"commited":30,"isChecking":false,"position":0,"inGame":true,"inHand":true,"strHole1":"XX","strHole2":"XX"},"command":"sb","value":30,"pot":30}
     if (data.type !== 'playermove') return -1;
     let seat = seatOf(data.seat);
     updatePlayerChips(seat, data.player.chips);
     updatePlayerBet(seat, data.player.commited);
+    // add visual text to show player move
+    let atc = seats[seat].getChildByName('pc')
+                         .getChildByName('atc');
+    addActionText(atc, data.command);
+    //audio
+    human_sounds[data.command].play();
+    updatePot(data.pot);
+    if (data.command === 'fold'){
+        foldPlayer(seat);
+    }
+    // server: {"type":"playermove","seat":0,"player":{"name":"eee","chips":9970,
+    // "commited":30,"isChecking":false,"position":0,"inGame":true,
+    // "inHand":true,"strHole1":"XX","strHole2":"XX"},"command":"sb","value":30,"pot":30}
 }
 
+// attach click handlers
+function addActionButtonHandlers(){
+    console.debug('addActionButtonHandlers() called.');
+    app.stage.getChildByName('abc')
+        .getChildByName('fold').click = function() {
+        console.log("fold button clicked.");
+        foldPlayer(mySeat()); // fold me immediately
+        sendAction("fold", 0);
+        removeActionButtons();
+    };
+    app.stage.getChildByName('abc')
+        .getChildByName('call').click = function() {
+        console.log("call button clicked.");
+        call(mySeat()); // fold me immediately
+        sendAction("fold", 0);
+        removeActionButtons();
+    };
+}
+
+function foldPlayer(seat){
+    console.log("foldPlayer(%d) called", seat);
+    let hcc = seats[seat].getChildByName('pc')
+                         .getChildByName('hcc');
+    removeHoleCards(hcc);
+}
+
+function mySeat(){
+    for (let i=0; i<seats.length; i++){
+        let name = seats[i]
+            .getChildByName('pc')
+            .getChildByName('ncc')
+            .getChildByName('namerect')
+            .getChildByName('name').text;
+        if (name === player.name){
+            return i;
+        }
+    }
+}
+
+
+
 function updatePlayerChips(seat, amount){
+    console.log("updatePlayerChips(%d,%d) called", seat, amount);
     let pc = seats[seat].getChildByName('pc');
     pc.getChildByName('ncc')
         .getChildByName('chipsrect')
         .getChildByName('chips').text = amount;
+}
+
+function clearAllPlayersBets(){
+    for (let i=0; i<seats.length; i++){
+        let bc = seats[i]
+            .getChildByName('pc')
+            .getChildByName('bc');
+        let bet = bc.getChildByName('bet');
+        if ( bet !== undefined ) {
+            console.debug('clearing bet from seat %d.', i);
+            bc.removeChild(bet)
+        }
+    }
 }
 
 function updatePlayerBet(seat, amount){
@@ -302,7 +486,10 @@ function updatePlayerBet(seat, amount){
                         .getChildByName('bc');
     // remove old container if exists
     let oldc = bc.getChildByName('bet');
+    //console.log('bc is');
+    //console.log(bc);
     if ( oldc !== undefined ) {
+        console.log('removing old bet.');
         bc.removeChild(oldc)
     }
     let bet = newBetContainer(amount);
@@ -331,7 +518,9 @@ function updateMyHoleCards(data) {
             .getChildByName('pc')
             .getChildByName('hcc');
         removeHoleCards(hcc);
-        addHoleCards(data.card1 ,data.card2, hcc);
+        //addHoleCards(data.card1 ,data.card2, hcc);
+        addHole1(data.card1, hcc);
+        addHole2(data.card2, hcc);
     }
 }
 
@@ -381,8 +570,8 @@ function addStatusMessage(status_array, message){
 }
 
 function showStatusMessages(status_array, sprite){
-    console.log(sprite);
-    console.log(status_array);
+    //console.log(sprite);
+    //console.log(status_array);
     // reset text
     sprite.text = '\n';
     // all messages can appear

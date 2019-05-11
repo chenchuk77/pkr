@@ -37,6 +37,7 @@ function getCardSprite(cardCode) {
     //console.log(cardCode);
     // card background
     let cardBg = new PIXI.Graphics();
+    cardBg.name = 'bg';
     cardBg.lineStyle(1, 0xeefffc, 1);
     cardBg.beginFill(0xeeffcc);
     cardBg.drawRoundedRect(0, 0,119, 155, 12);
@@ -44,6 +45,7 @@ function getCardSprite(cardCode) {
     // face down card drawn as rect
     if (cardCode === "XX"){
         let hiddenCard = new PIXI.Graphics();
+        hiddenCard.name = 'hidden';
         hiddenCard.lineStyle(1, 0x023363, 1);
         hiddenCard.beginFill(0x023363);
         hiddenCard.drawRoundedRect(0, 0,115, 151, 12);
@@ -301,6 +303,29 @@ function removeHoleCards(container){
 
 }
 
+// drawing card1 of specific seat
+function addHole1(code, container){
+    let bg = new PIXI.Graphics();
+    bg.name = 'bg';
+    container.addChild(bg);
+    let hole1 = getCardSprite(code);
+    hole1.name = 'hole1';
+    hole1.position.set(0,0);
+    hole1.scale.x = TABLE.cards.scale;
+    hole1.scale.y = TABLE.cards.scale;
+    container.addChild(hole1);
+}
+// drawing card2 of specific seat
+function addHole2(code, container){
+    let hole2 = getCardSprite(code);
+    hole2.name = 'hole2';
+    hole2.position.set(50,0);
+    hole2.scale.x = TABLE.cards.scale;
+    hole2.scale.y = TABLE.cards.scale;
+    container.addChild(hole2);
+}
+
+
 // drawing cards of specific seat
 function addHoleCards(code1, code2, container){
     // container for highlighter
@@ -344,6 +369,38 @@ function drawCards(code1, code2, seat_id){
     app.stage.addChild(card2);
 }
 
+// animate dealing cards among curved path
+function deal(sprite, audio, start, via, end) {
+    function bezier(t, p0, p1, p2, p3) {
+        let cX = 3 * (p1.x - p0.x),
+            bX = 3 * (p2.x - p1.x) - cX,
+            aX = p3.x - p0.x - cX - bX;
+        let cY = 3 * (p1.y - p0.y),
+            bY = 3 * (p2.y - p1.y) - cY,
+            aY = p3.y - p0.y - cY - bY;
+        let x = (aX * Math.pow(t, 3)) + (bX * Math.pow(t, 2)) + (cX * t) + p0.x;
+        let y = (aY * Math.pow(t, 3)) + (bY * Math.pow(t, 2)) + (cY * t) + p0.y;
+        return {x: x, y: y};
+    }
+
+    let i = 0;
+    sprite.alpha = 1;
+    app.ticker.add(() => {
+        if (i <= 1) {
+            let p = bezier(i, start, via, end, end);
+            sprite.x = p.x;
+            sprite.y = p.y;
+            i += 0.03;
+            sprite.rotation += (1 - i * i);
+            sprite.alpha -= 0.02;
+            // fade out faster at the end
+            if (sprite.alpha < 0.5){
+                sprite.alpha -= 0.05;
+            }
+        }
+    });
+    audio.play();
+}
 // // drawing status message (update message)
 // function drawStatusMessage(message) {
 //     console.log('drawStatusMessage() called. with message: ' + message);

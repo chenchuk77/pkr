@@ -27,7 +27,8 @@ let highlighter_count = 0;
 let stash = new PIXI.Container();
 let dealer_button;
 
-var connection = new WebSocket('ws://192.168.2.39:4444');
+// var connection = new WebSocket('ws://192.168.2.39:4444');
+var connection = new WebSocket('ws://192.168.1.7:4444');
 
 connection.onopen = function () {
     console.log('client connected.');
@@ -130,7 +131,8 @@ connection.onmessage = function (e) {
             options = commandJSON.options;
             optionAmouns = commandJSON.optionAmounts;
             drawActionButtons(commandJSON);
-            addActionButtonHandlers(commandJSON)
+            addActionButtonHandlers(commandJSON);
+            game_sounds.myturn.play();
 
         } else {
             // not our turn
@@ -288,7 +290,8 @@ function play(delta) {
 }
 
 function newHand(){
-
+  // TODO: clear state
+    // print new hand message
 }
 
 // seats is positioned container. it has absolute position on the table
@@ -320,7 +323,7 @@ function updateMySeat(data){
         //console.log ("checking " + data[i].name);
         if (data[i].name === player.name){
             my_pid = i;
-            console.debug("my player id: %d will seat at seat[0].", my_pid);
+            console.log("my player id: %d will seat at seat[0].", my_pid);
             return;
         }
     }
@@ -354,6 +357,57 @@ function updateFull(data){
         //console.debug("seating %s from data[%d] at seat[%d].", p.name, i, s);
         let pc = newPlayerContainer(s, 'images/avatars/girl1.jpeg', p.name, p.chips, p.commited, p.strHole1, p.strHole2);
         seats[s].addChild(pc)
+    }
+}
+
+function dealHands(data){
+    let cc = new PIXI.Container();
+    app.stage.addChild(cc);
+    let numOfPlayers = Object.keys(data).length;
+    for (let i = 0; i < numOfPlayers; i++) {
+        let s = seatOf(i);
+        let p = data[Object.keys(data)[i]];
+        if (p.inHand && p.inGame) {
+            // build sprite for card movement
+            let card = new PIXI.Graphics();
+            card.lineStyle(3, 0xeefffc, 3);
+            card.beginFill(0x023363);
+            card.drawRoundedRect(0, 0,115, 151, 12);
+            let border = new PIXI.Graphics();
+            border.lineStyle(3, 0xeefffc, 3);
+            border.beginFill(0xeeffcc);
+            border.drawRoundedRect(0, 0,119, 155, 12);
+            card.position.set(2, 2);
+            border.addChild(card);
+
+            let sprite = PIXI.Sprite.from(border.generateTexture());
+            sprite.scale.set(TABLE.cards.scale);
+            sprite.anchor.set(0.5);
+            cc.addChild(sprite);
+
+            // set timers for both cards for all players
+            setTimeout(function () {
+                console.log('dealing card-1 to seat %d', s);
+                // animate deal card
+                deal(sprite, dealCard1Sound[s],
+                    TABLE.deckCards, PLAYER[s].dealpath, PLAYER[s].position);
+                    let hcc = seats[s].getChildByName('pc')
+                                      .getChildByName('hcc');
+                addHole1('XX', hcc);
+                // deal 2nd hole card (50 px right)
+                setTimeout(function () {
+                    console.log('dealing card-2 to seat %d', s);
+                    deal(sprite, dealCard2Sound[s],
+                        TABLE.deckCards, PLAYER[s].dealpath, PLAYER[s].position2);
+                    let hcc = seats[s].getChildByName('pc')
+                                      .getChildByName('hcc');
+                    addHole2('XX', hcc);
+                }, 100*i + 100*NUMBER_OF_PLAYERS);
+            }, 100*i);
+
+        } else {
+            console.log('skipping seat %d', s);
+        }
     }
 }
 
@@ -393,6 +447,40 @@ function moveDealerButton(data) {
     }
 }
 
+// accepts a container and add a dynamic text that will
+// disappear in few seconds;
+function addActionText(container, text){
+    let ac = new PIXI.Container();
+    ac.name = 'ac';
+    // background
+    let r1 = new PIXI.Graphics();
+    r1.lineStyle(2, 0xF7DC6F, 1);
+    r1.beginFill(0x273746);
+    r1.drawRoundedRect(0, 0, 96, 32, 8);
+    ac.addChild(r1);
+    // text
+    let t1 = new PIXI.Text(text, new PIXI.TextStyle(NAME_STYLE));
+    t1.position.set(16, 6);
+    ac.addChild(t1);
+    // smoothly light and dark then removes itself from the container
+    let x = 0;
+    let countUp = true;
+    app.ticker.add(() => {
+        if (countUp){
+            x += 0.02;
+            if (x > 1 ) countUp = false;
+        } else {
+            x -= 0.01;
+            if (x <= 0 ){
+                container.removeChild(ac);
+                return;
+            }
+        }
+        ac.alpha = x
+    });
+    container.addChild(ac);
+}
+
 function removeAllHoleCards(){
     for (let i=0; i<seats.length; i++){
         let pc = seats[i].getChildByName('pc');
@@ -416,6 +504,12 @@ function updatePlayerMove(data){
     let seat = seatOf(data.seat);
     updatePlayerChips(seat, data.player.chips);
     updatePlayerBet(seat, data.player.commited);
+    // add visual text to show player move
+    let atc = seats[seat].getChildByName('pc')
+        .getChildByName('atc');
+    addActionText(atc, data.command);
+    //audio
+    human_sounds[data.command].play();
     updatePot(data.pot);
     if (data.command === 'fold'){
         foldPlayer(seat);
@@ -532,8 +626,9 @@ function updateMyHoleCards(data) {
             .getChildByName('pc')
             .getChildByName('hcc');
         removeHoleCards(hcc);
-        addHoleCards(data.card1 ,data.card2, hcc);
-
+        //addHoleCards(data.card1 ,data.card2, hcc);
+        addHole1(data.card1, hcc);
+        addHole2(data.card2, hcc);
     }
 }
 
@@ -546,12 +641,12 @@ function updatePot(amount){
     tc.addChild(pot);
 }
 
-// function waitingPlayerMove(data) {
-//     // {"type":"waitaction","player":"p5","options":["fold","call","raise","allin"],"optionAmounts":{"call":30,"max_raise":9970,"min_raise":120,"allin":9970}}
-//     if (data.type !== 'waitaction') return -1;
-//     highLightPlayer(data);
-//
-// }
+function waitingPlayerMove(data) {
+    // {"type":"waitaction","player":"p5","options":["fold","call","raise","allin"],"optionAmounts":{"call":30,"max_raise":9970,"min_raise":120,"allin":9970}}
+    if (data.type !== 'waitaction') return -1;
+    highLightPlayer(data);
+
+}
 
 function RemovePlayerHighlight(){
         // adding to stash will remove from UI
@@ -622,3 +717,6 @@ function showStatusMessages(status_array, sprite){
 // "command":"call",
 // "value":30,
 // "pot":240}
+
+
+// -- maven, jdk, node, nodejs-legacy, npm

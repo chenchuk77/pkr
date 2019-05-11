@@ -23,7 +23,7 @@ public class ConsoleLauncher{
         Constructor<?> constructor = clazz.getConstructor(URI.class, String.class);
         //System.out.println("USERNAMEEEE=: " + USERNAME);
 
-        Object instance = constructor.newInstance(new URI( "ws://localhost:4444" ), USERNAME);
+        Object instance = constructor.newInstance(new URI( "ws://52.17.43.16:4444" ), USERNAME);
         ConsoleClient c = (ConsoleClient) instance;
         System.out.println("starting a new player from class: " + c.getClass().getName());
 

@@ -2,33 +2,6 @@
 * Constants to be use by all project
 * */
 
-// constants
-// let pocketCardPosition =[
-//     {x: 100, y:250},
-//     {x: 200, y:300},
-//     {x: 300, y:300},
-//     {x: 400, y:250}
-// ];
-// let betsPosition =[
-//     {x: 120, y:200},
-//     {x: 220, y:250},
-//     {x: 320, y:250},
-//     {x: 420, y:200}
-// ];
-// let buttonsPosition =[
-//     {x: 80, y:200},
-//     {x: 180, y:250},
-//     {x: 280, y:250},
-//     {x: 380, y:200}
-// ];
-//
-// let actionButtonsPosition =[
-//     {x: 100, y:600},
-//     {x: 350, y:600},
-//     {x: 500, y:600},
-//     {x: 650, y:600}
-// ];
-
 // const NUMBER_OF_PLAYERS=9;
 const NUMBER_OF_PLAYERS=4;
 
@@ -37,9 +10,9 @@ const TABLE = {
     position:   {x: 200, y: 120},
     size:       {x: 900, y: 400},
     cards:      {scale: 0.4},
-    //cards:      {scale: 1},
     ccc:        {x: 500, y: 300},
     deck:       {x: 180, y: 130},
+    deckCards:  {x: 420, y: 360},
     flop1:      {x: 100, y: 0},
     flop2:      {x: 230, y: 0},
     flop3:      {x: 360, y: 0},
@@ -57,7 +30,6 @@ const BUTTONS = {
     bet:   {x: 180, y: 80},
     raise: {x: 180, y: 80}
 };
-
 
 // status container
 const STATUS = {
@@ -77,12 +49,15 @@ const PLAYER = {
         midrect:    {x: 0, y: 32},
         ncc:        {x: 0, y: 64},
         position:   {x: 600, y: 470},
+        position2:  {x: 650, y: 470},
+        dealpath:   {x: 600, y: 470},
         size:       {x: 80, y:40},
         name:       {x: 0, y:40},
         chips:      {x: 0, y:60},
         avatar:     {x: 0, y:0},
         avatar_cards:    {x: 1, y:1},
         committed: {x: 1, y:1}},
+
     1: {class: "bottom-player",
         bet:        {x: 0, y: -32},
         ac:         {x: 0, y: 0},
@@ -92,6 +67,8 @@ const PLAYER = {
         midrect:    {x: 0, y: 32},
         ncc:        {x: 0, y: 64},
         position:   {x: 400, y: 470},
+        position2:  {x: 450, y: 470},
+        dealpath:   {x: 400, y: 470},
         size:       {x: 40, y:80},
         name:       {x: 0, y:40},
         chips:      {x: 0, y:60},
@@ -107,6 +84,8 @@ const PLAYER = {
         midrect:    {x: -32, y: 0},
         ncc:        {x: -64, y: 0},
         position:   {x: 170, y: 260},
+        position2:   {x: 220, y: 260},
+        dealpath:   {x: 170, y: 260},
         size:       {x: 80, y:40},
         name:       {x: 0, y:0},
         chips:      {x: 0, y:20},
@@ -122,6 +101,8 @@ const PLAYER = {
         midrect:    {x: 0, y: -32},
         ncc:        {x: 0, y: -64},
         position:   {x: 300, y: 70},
+        position2:   {x: 350, y: 70},
+        dealpath:   {x: 200, y: 170},
         size:       {x: 40, y:80},
         name:       {x: 0, y:0},
         chips:      {x: 0, y:20},
@@ -137,6 +118,8 @@ const PLAYER = {
         midrect:    {x: 0, y: -32},
         ncc:        {x: 0, y: -64},
         position:   {x: 500, y: 70},
+        position2:   {x: 550, y: 70},
+        dealpath:   {x: 400, y: 170},
         size:       {x: 40, y:80},
         name:       {x: 0, y:0},
         chips:      {x: 0, y:20},
@@ -152,6 +135,8 @@ const PLAYER = {
         midrect:    {x: 0, y: -32},
         ncc:        {x: 0, y: -64},
         position:   {x: 700, y: 70},
+        position2:   {x: 750, y: 170},
+        dealpath:   {x: 600, y: 120},
         size:       {x: 40, y:80},
         name:       {x: 0, y:0},
         chips:      {x: 0, y:20},
@@ -167,6 +152,8 @@ const PLAYER = {
         midrect:    {x: 0, y: -32},
         ncc:        {x: 0, y: -64},
         position:   {x: 900, y: 70},
+        position2:   {x: 950, y: 70},
+        dealpath:   {x: 800, y: 170},
         size:       {x: 40, y:80},
         name:       {x: 0, y:0},
         chips:      {x: 0, y:20},
@@ -182,6 +169,8 @@ const PLAYER = {
         midrect:    {x: 32, y: 0},
         ncc:        {x: 64, y: 0},
         position:   {x: 1065, y: 300},
+        position2:   {x: 1115, y: 300},
+        dealpath:   {x: 1065, y: 300},
         size:       {x: 80, y:40},
         name:       {x: 40, y:0},
         chips:      {x: 40, y:20},
@@ -197,6 +186,8 @@ const PLAYER = {
         midrect:    {x: 0, y: 32},
         ncc:        {x: 0, y: 64},
         position:   {x: 800, y: 470},
+        position2:   {x: 850, y: 470},
+        dealpath:   {x: 800, y: 470},
         size:       {x: 40, y:80},
         name:       {x: 1, y:1},
         chips:      {x: 1, y:1},

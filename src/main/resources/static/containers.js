@@ -59,9 +59,13 @@ function newPlayerContainer(i, avatar, name, chips, commited, card1, card2, x, y
     // hcc.addChild(bg);
     hcc.position.set(PLAYER[i].hcc.x, PLAYER[i].hcc.y);
     pc.addChild(hcc);
-    addHoleCards(card1, card2, hcc);
+    // addHoleCards(card1, card2, hcc);
 
 
+    // action text container
+    let atc = new PIXI.Container();
+    atc.name = 'atc';
+    pc.addChild(atc);
 
     // name and chips container
     let ncc = new PIXI.Container();
