@@ -3,6 +3,6 @@
 * */
 
 env = {
-    PKR_HOST: '1.1.1.1',
-    PKR_PORT: '4.4.4.4'
+    PKR_HOST: '52.17.43.16',
+    PKR_PORT: '4444'
 };
