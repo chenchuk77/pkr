@@ -614,17 +614,23 @@ function updateCommunityCards(data){
 }
 
 function updateMyHoleCards(data) {
-    // ignore: {"type":"cards","seat":3,"card1":"5c"}
+    console.log('updateMyHoleCards() called');
+// ignore: {"type":"cards","seat":3,"card1":"5c"}
     // {"type":"cards","seat":3,"card1":"5c","card2":"9c"}
     if (data.type !== 'cards') return -1;
     if (data.card2 !== undefined){
         let hcc = seats[seatOf(data.seat)]
             .getChildByName('pc')
             .getChildByName('hcc');
+        console.log(hcc);
         removeHoleCards(hcc);
+        console.log(hcc);
+
         //addHoleCards(data.card1 ,data.card2, hcc);
         addHole1(data.card1, hcc);
         addHole2(data.card2, hcc);
+        console.log(hcc);
+
     }
 }
 
