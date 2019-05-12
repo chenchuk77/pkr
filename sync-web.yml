@@ -1,0 +1,12 @@
+---
+- hosts: sim
+  become: true
+  tasks:
+    - debug:
+        msg: "test"
+
+    - synchronize:
+        src: src/main/resources/static/
+        dest: /home/chenchuk/pkr/src/main/resources/static
+        #dest: /home/chenchuk/test
+        #delegate_to: localhost

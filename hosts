@@ -1,0 +1,9 @@
+---
+# specify the targeted host to deploy the simulator apps
+
+ sim:
+  hosts:
+    52.17.43.16:
+      ansible_host: 52.17.43.16
+      ansible_user: chenchuk
+      ansible_ssh_private_key_file: /home/chenchuk/.ssh/id_rsa
