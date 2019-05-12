@@ -27,8 +27,12 @@ let highlighter_count = 0;
 let stash = new PIXI.Container();
 let dealer_button;
 
+let websocket_url = 'ws://' + env.PKR_HOST + ':' + env.PKR_PORT;
+console.log('websocket url: ' + websocket_url);
+
 // var connection = new WebSocket('ws://192.168.2.39:4444');
-var connection = new WebSocket('ws://52.17.43.16:4444');
+var connection = new WebSocket(websocket_url);
+// var connection = new WebSocket('ws://52.17.43.16:4444');
 
 connection.onopen = function () {
     console.log('client connected.');
