@@ -107,15 +107,32 @@ connection.onmessage = function (e) {
 
     // }
     if (e.data.includes('community')) {
+        // {"type":"community","flop1":"Ah","flop2":"Ad","flop3":"Ac"}
         console.log('communityCards update received.');
         //newCommunityCardsContainer();
         communityCards = JSON.parse(e.data);
+
+
+        if (communityCards.river !== undefined ){
+            dealer_sounds.dealing_river.play();
+        } else if (communityCards.turn !== undefined){
+            dealer_sounds.dealing_turn.play();
+        } else {
+            dealer_sounds.dealing_flop.play();
+        }
+
         updateCommunityCards(communityCards);
     }
     if (e.data.includes('cards')) {
         console.log('holecards update received.');
         // holeCards = 1 and 2 for ctx only
-        updateMyHoleCards(JSON.parse(e.data));
+        // timeout because dealing cards not done yet TODO:
+        setTimeout(function () {
+            console.log('');
+            updateMyHoleCards(JSON.parse(e.data));
+        }, 2000);
+
+
     }
     if (e.data.includes('dealerPosition')) {
         let buttonsJSON = JSON.parse(e.data);
@@ -618,16 +635,16 @@ function updateMyHoleCards(data) {
 // ignore: {"type":"cards","seat":3,"card1":"5c"}
     // {"type":"cards","seat":3,"card1":"5c","card2":"9c"}
     if (data.type !== 'cards') {
-        console.log('only 1 hole card received, ignoring update.');
         return -1;
     }
 
     if (data.card2 !== undefined){
         console.log('2 hole card received, accepting update.');
+        console.log('seat = ' + seatOf(data.seat));
 
-        let hcc = seats[seatOf(data.seat)]
-            .getChildByName('pc')
-            .getChildByName('hcc');
+        let pc = seats[seatOf(data.seat)]
+            .getChildByName('pc');
+        let hcc = pc.getChildByName('hcc');
         console.log(hcc);
         removeHoleCards(hcc);
         console.log(hcc);

@@ -8,12 +8,18 @@ let fold_file  = 'sounds/fold.mp3';
 let check_file = 'sounds/check.mp3';
 
 let human_sounds = {
-  bet: getSound(bet_file),
+  bet:   getSound(bet_file),
   raise: getSound(raise_file),
-  call: getSound(call_file),
-  fold: getSound(fold_file),
+  call:  getSound(call_file),
+  fold:  getSound(fold_file),
   check: getSound(check_file)
+};
 
+let dealer_sounds = {
+  new_hand:      getSound('sounds/new-hand.mp3'),
+  dealing_flop:  getSound('sounds/dealing-flop.mp3'),
+  dealing_turn:  getSound('sounds/dealing-turn.mp3'),
+  dealing_river: getSound('sounds/dealing-river.mp3')
 };
 
 
