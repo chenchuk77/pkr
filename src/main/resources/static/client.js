@@ -617,8 +617,14 @@ function updateMyHoleCards(data) {
     console.log('updateMyHoleCards() called');
 // ignore: {"type":"cards","seat":3,"card1":"5c"}
     // {"type":"cards","seat":3,"card1":"5c","card2":"9c"}
-    if (data.type !== 'cards') return -1;
+    if (data.type !== 'cards') {
+        console.log('only 1 hole card received, ignoring update.');
+        return -1;
+    }
+
     if (data.card2 !== undefined){
+        console.log('2 hole card received, accepting update.');
+
         let hcc = seats[seatOf(data.seat)]
             .getChildByName('pc')
             .getChildByName('hcc');
