@@ -1,6 +1,7 @@
 #!/bin/bash
 
-PROJECT_FOLDER="${HOME}/dev/pkr"
+#PROJECT_FOLDER="${HOME}/dev/pkr"
+export PKR_ROOT="/home/chenchuk/pkr"
 
 which node > /dev/null 2>&1 || { echo "missing node js";  exit 1; }
 echo "to rank hand use:"
