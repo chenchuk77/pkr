@@ -28,7 +28,7 @@ let stash = new PIXI.Container();
 let dealer_button;
 
 // var connection = new WebSocket('ws://192.168.2.39:4444');
-var connection = new WebSocket('ws://192.168.1.7:4444');
+var connection = new WebSocket('ws://52.17.43.16:4444');
 
 connection.onopen = function () {
     console.log('client connected.');
