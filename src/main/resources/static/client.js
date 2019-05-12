@@ -58,6 +58,7 @@ connection.onmessage = function (e) {
             // first calculate my own seat for shifting others
             updateMySeat(ctx_seats);
             updateFull(ctx_seats);
+            dealHands(ctx_seats);
             updateScreen = false;
         } else {
             console.log('ignoring full update.');
@@ -491,7 +492,6 @@ function removeAllHoleCards(){
             }else{
                 console.warn('should not be here hcc should be defined when pc exists')
             }
-
         } else {
             console.log('no pc for seat %d', i)
         }
@@ -517,7 +517,6 @@ function updatePlayerMove(data){
     // server: {"type":"playermove","seat":0,"player":{"name":"eee","chips":9970,
     // "commited":30,"isChecking":false,"position":0,"inGame":true,
     // "inHand":true,"strHole1":"XX","strHole2":"XX"},"command":"sb","value":30,"pot":30}
-
 }
 
 // attach click handlers
@@ -537,9 +536,6 @@ function addActionButtonHandlers(){
         sendAction("fold", 0);
         removeActionButtons();
     };
-
-
-
 }
 
 function foldPlayer(seat){
@@ -555,24 +551,22 @@ function mySeat(){
             .getChildByName('pc')
             .getChildByName('ncc')
             .getChildByName('namerect')
-            .getChildByName('name').text
+            .getChildByName('name').text;
         if (name === player.name){
             return i;
         }
     }
-
 }
 
 
 
 function updatePlayerChips(seat, amount){
-    console.debug("updatePlayerChips(%d,%d) called", seat, amount)
+    console.log("updatePlayerChips(%d,%d) called", seat, amount);
     let pc = seats[seat].getChildByName('pc');
     pc.getChildByName('ncc')
         .getChildByName('chipsrect')
         .getChildByName('chips').text = amount;
 }
-
 
 function clearAllPlayersBets(){
     for (let i=0; i<seats.length; i++){
@@ -587,7 +581,6 @@ function clearAllPlayersBets(){
     }
 }
 
-
 function updatePlayerBet(seat, amount){
     let bc = seats[seat].getChildByName('pc')
                         .getChildByName('bc');
@@ -595,9 +588,8 @@ function updatePlayerBet(seat, amount){
     let oldc = bc.getChildByName('bet');
     //console.log('bc is');
     //console.log(bc);
-
     if ( oldc !== undefined ) {
-        console.debug('removing old bet.');
+        console.log('removing old bet.');
         bc.removeChild(oldc)
     }
     let bet = newBetContainer(amount);
@@ -610,8 +602,8 @@ function updateCommunityCards(data){
     if (data.type !== 'community') return -1;
     // let tc = app.stage.getChildByName('tc').getChildByName('table');
     let tc = app.stage.getChildByName('tc');
-    // // remove old container
-    // tc.removeChild(tc.getChildByName('ccc'));
+    // remove old container
+    tc.removeChild(tc.getChildByName('ccc'));
     let ccc = newCommunityCardsContainer(data);
     ccc.position.set(TABLE.ccc.x, TABLE.ccc.y);
     tc.addChild(ccc);
